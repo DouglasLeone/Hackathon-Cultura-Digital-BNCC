@@ -1,31 +1,29 @@
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { DIContainer } from '../di/container';
-import { HistoricoGeracao, Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const useHistoricoViewModel = () => {
-    const [historico, setHistorico] = useState<HistoricoGeracao[]>([]);
-    const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
-    const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     // Filters
     const [filterDisciplina, setFilterDisciplina] = useState<string>('all');
     const [filterTipo, setFilterTipo] = useState<string>('all');
     const [filterSearch, setFilterSearch] = useState<string>('');
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
+    // Fetch Data using React Query
+    const { data: historico = [], isLoading: loadingHistorico } = useQuery({
+        queryKey: ['historico'],
+        queryFn: async () => {
             const [historicoData, disciplinasData, unidadesData] = await Promise.all([
                 DIContainer.genIARepository.getHistorico(),
                 DIContainer.getAllDisciplinasUseCase.execute(),
                 DIContainer.getAllUnidadesUseCase.execute()
             ]);
 
-            // Client-side join to fix missing relation
-            const enrichedHistorico = historicoData.map(h => ({
+            // Client-side join
+            return historicoData.map(h => ({
                 ...h,
                 disciplina: disciplinasData.find(d => d.id === h.disciplina_id)
                     ? { nome: disciplinasData.find(d => d.id === h.disciplina_id)!.nome }
@@ -34,34 +32,27 @@ export const useHistoricoViewModel = () => {
                     ? { tema: unidadesData.find(u => u.id === h.unidade_id)!.tema }
                     : undefined
             }));
-
-            setHistorico(enrichedHistorico);
-            setDisciplinas(disciplinasData);
-        } catch (error) {
-            console.error('Error fetching historico:', error);
-            toast({
-                title: "Erro",
-                description: "Não foi possível carregar o histórico.",
-                variant: "destructive"
-            });
-        } finally {
-            setLoading(false);
         }
-    };
+    });
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    const { data: disciplinas = [], isLoading: loadingDisciplinas } = useQuery({
+        queryKey: ['disciplinas'],
+        queryFn: () => DIContainer.getAllDisciplinasUseCase.execute()
+    });
 
-    const deleteHistorico = async (id: string) => {
-        try {
-            await DIContainer.deleteHistoricoUseCase.execute(id);
-            setHistorico(prev => prev.filter(item => item.id !== id));
+    const loading = loadingHistorico || loadingDisciplinas;
+
+    // Delete Mutation
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => DIContainer.deleteHistoricoUseCase.execute(id),
+        onSuccess: (_, id) => {
+            queryClient.setQueryData(['historico'], (old: any[]) => old.filter((item: any) => item.id !== id));
             toast({
                 title: "Sucesso",
                 description: "Item removido do histórico.",
             });
-        } catch (error) {
+        },
+        onError: (error) => {
             console.error('Error deleting historico:', error);
             toast({
                 title: "Erro",
@@ -69,7 +60,9 @@ export const useHistoricoViewModel = () => {
                 variant: "destructive"
             });
         }
-    };
+    });
+
+    const deleteHistorico = (id: string) => deleteMutation.mutate(id);
 
     const filteredHistorico = useMemo(() => {
         return historico.filter(item => {
@@ -107,6 +100,6 @@ export const useHistoricoViewModel = () => {
         },
         stats,
         deleteHistorico,
-        refresh: loadData
+        refresh: () => queryClient.invalidateQueries({ queryKey: ['historico'] })
     };
 };
