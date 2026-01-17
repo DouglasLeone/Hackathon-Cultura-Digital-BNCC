@@ -25,7 +25,7 @@ export class PPTXService {
             x: 0.5, y: 1.2, w: '90%', h: '80%',
             fontSize: 14, color: '000000',
             valign: 'top',
-            breakLine: true
+            wrap: true
         });
 
         // Save
