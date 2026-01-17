@@ -61,17 +61,32 @@ const UnidadeDetailScreen = () => {
                         <CardContent>
                             {unidade.plano_aula ? (
                                 <div className="space-y-4 pt-4">
-                                    <ContentEditor
-                                        title={unidade.plano_aula.titulo}
-                                        initialContent={unidade.plano_aula.conteudo || ''}
-                                        onSave={async (content) => {
-                                            if (!unidade.plano_aula) return;
-                                            await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo: content });
-                                        }}
-                                        onExport={() => unidade.plano_aula && PPTXService.generateLessonPlanPPTX(unidade.plano_aula.titulo, unidade.plano_aula.conteudo || '')}
-                                        exportLabel="Baixar PPTX"
-                                    />
-                                    <Badge variant="outline" className="mt-2">Gerado em: {new Date(unidade.plano_aula.created_at).toLocaleDateString()}</Badge>
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full">
+                                                <FileText className="w-4 h-4 mr-2" />
+                                                Ver conteúdo
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h2 className="text-xl font-bold">{unidade.plano_aula.titulo}</h2>
+                                            </div>
+                                            <ContentEditor
+                                                title={unidade.plano_aula.titulo}
+                                                initialContent={unidade.plano_aula.conteudo || ''}
+                                                onSave={async (content) => {
+                                                    if (!unidade.plano_aula) return;
+                                                    await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo: content });
+                                                }}
+                                                onExport={() => unidade.plano_aula && PPTXService.generateLessonPlanPPTX(unidade.plano_aula.titulo, unidade.plano_aula.conteudo || '')}
+                                                exportLabel="Baixar PPTX"
+                                                variant="minimal"
+                                                hideTitle
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                    <Badge variant="outline" className="mt-2 w-full justify-center">Gerado em: {new Date(unidade.plano_aula.created_at).toLocaleDateString()}</Badge>
                                 </div>
                             ) : (
                                 <div className="pt-4">
@@ -98,24 +113,39 @@ const UnidadeDetailScreen = () => {
                         <CardContent>
                             {unidade.atividade_avaliativa ? (
                                 <div className="space-y-4 pt-4">
-                                    <ContentEditor
-                                        title={unidade.atividade_avaliativa.titulo}
-                                        initialContent={JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2)}
-                                        onSave={async (content) => {
-                                            if (!unidade.atividade_avaliativa) return;
-                                            try {
-                                                const parsed = JSON.parse(content);
-                                                await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
-                                            } catch (e) {
-                                                console.error("Invalid JSON");
-                                                alert("JSON inválido");
-                                                throw e;
-                                            }
-                                        }}
-                                        onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2))}
-                                        exportLabel="Baixar PDF"
-                                    />
-                                    <div className="flex gap-2 items-center mt-2">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full">
+                                                <ClipboardList className="w-4 h-4 mr-2" />
+                                                Ver conteúdo
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h2 className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</h2>
+                                            </div>
+                                            <ContentEditor
+                                                title={unidade.atividade_avaliativa.titulo}
+                                                initialContent={JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2)}
+                                                onSave={async (content) => {
+                                                    if (!unidade.atividade_avaliativa) return;
+                                                    try {
+                                                        const parsed = JSON.parse(content);
+                                                        await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
+                                                    } catch (e) {
+                                                        console.error("Invalid JSON");
+                                                        alert("JSON inválido");
+                                                        throw e;
+                                                    }
+                                                }}
+                                                onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2))}
+                                                exportLabel="Baixar PDF"
+                                                variant="minimal"
+                                                hideTitle
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                    <div className="flex gap-2 items-center mt-2 justify-center">
                                         <Badge variant="outline">Pontuação: {unidade.atividade_avaliativa.pontuacao_total}</Badge>
                                     </div>
                                 </div>
