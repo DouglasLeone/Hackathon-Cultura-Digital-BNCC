@@ -33,6 +33,16 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         setGenerating('plano');
         try {
             const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade);
+
+            await DIContainer.logMaterialGenerationUseCase.execute({
+                tipo: 'plano_aula',
+                titulo: `Plano de Aula: ${unidade.tema}`,
+                descricao: `Plano de aula gerado para a unidade ${unidade.tema}`,
+                disciplina_id: unidade.disciplina_id,
+                unidade_id: unidade.id,
+                referencia_id: result.id
+            });
+
             setUnidade(prev => prev ? { ...prev, plano_aula: result } : null);
             toast({
                 title: "Sucesso",
@@ -55,6 +65,16 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         setGenerating('atividade');
         try {
             const result = await DIContainer.generateAtividadeUseCase.execute(unidade);
+
+            await DIContainer.logMaterialGenerationUseCase.execute({
+                tipo: 'atividade',
+                titulo: `Atividade: ${unidade.tema}`,
+                descricao: `Atividade avaliativa gerada para a unidade ${unidade.tema}`,
+                disciplina_id: unidade.disciplina_id,
+                unidade_id: unidade.id,
+                referencia_id: result.id
+            });
+
             setUnidade(prev => prev ? { ...prev, atividade_avaliativa: result } : null);
             toast({
                 title: "Sucesso",
@@ -77,6 +97,15 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         setGenerating('slides');
         try {
             await DIContainer.generateSlidesUseCase.execute(unidade);
+
+            await DIContainer.logMaterialGenerationUseCase.execute({
+                tipo: 'slides',
+                titulo: `Slides: ${unidade.tema}`,
+                descricao: `Slides gerados para a unidade ${unidade.tema}`,
+                disciplina_id: unidade.disciplina_id,
+                unidade_id: unidade.id
+            });
+
             toast({
                 title: "Sucesso",
                 description: "Slides gerados com sucesso (simulação).",
