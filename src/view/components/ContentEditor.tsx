@@ -11,6 +11,8 @@ interface ContentEditorProps {
     onSave: (content: string) => Promise<void>;
     onExport: () => void;
     exportLabel?: string;
+    variant?: 'default' | 'minimal';
+    hideTitle?: boolean;
 }
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -18,7 +20,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     initialContent,
     onSave,
     onExport,
-    exportLabel = "Exportar"
+    exportLabel = "Exportar",
+    variant = 'default',
+    hideTitle = false
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(initialContent);
@@ -47,13 +51,22 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         }
     };
 
+    const containerStyles = variant === 'default'
+        ? "bg-white border rounded-lg shadow-sm p-6 w-full"
+        : "w-full h-full flex flex-col";
+
     return (
-        <div className="bg-white border rounded-lg shadow-sm p-6 w-full">
-            <div className="flex items-center justify-between mb-4 border-b pb-4">
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-800">Conteúdo Gerado</h3>
-                    <p className="text-sm text-gray-500">Revise, edite se necessário e exporte o conteúdo</p>
-                </div>
+        <div className={containerStyles}>
+            <div className={`flex items-center justify-between mb-4 ${variant === 'default' ? 'border-b pb-4' : ''}`}>
+                {!hideTitle && (
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Conteúdo Gerado</h3>
+                        <p className="text-sm text-gray-500">Revise, edite se necessário e exporte o conteúdo</p>
+                    </div>
+                )}
+                {/* Spacer if title is hidden to push buttons to right */}
+                {hideTitle && <div />}
+
                 <div className="flex gap-2">
                     {isEditing ? (
                         <>
@@ -88,10 +101,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 <Textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    className="min-h-[500px] font-mono text-sm leading-relaxed"
+                    className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4"
                 />
             ) : (
-                <div className="prose max-w-none text-gray-700 whitespace-pre-wrap min-h-[300px]">
+                <div className="prose max-w-none text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto p-1">
                     {content}
                 </div>
             )}
