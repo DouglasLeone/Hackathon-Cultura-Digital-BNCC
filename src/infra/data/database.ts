@@ -244,18 +244,20 @@ export async function getHistorico(): Promise<HistoricoGeracao[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data as unknown) as HistoricoGeracao[];
+  return (data || []) as unknown as HistoricoGeracao[];
 }
 
 export async function addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'created_at'>): Promise<HistoricoGeracao> {
+  const { disciplina, unidade, ...insertData } = historico;
   const { data, error } = await supabase
     .from('historico_geracoes')
-    .insert(historico as any) // Type assertion to bypass strict inference mismatch if optional fields differ
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(insertData as any)
     .select()
     .single();
 
   if (error) throw error;
-  return data as HistoricoGeracao;
+  return data as unknown as HistoricoGeracao;
 }
 
 export async function deleteHistorico(id: string): Promise<void> {

@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useUnidadeDetailViewModel } from '@/viewmodel/useUnidadeDetailViewModel';
 import { AppLayout } from '@/view/components/layout/AppLayout';
@@ -7,6 +8,12 @@ import { Badge } from '@/view/components/ui/badge';
 import { Button } from '@/view/components/ui/button';
 import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ContentEditor } from '@/view/components/ContentEditor';
+import { PPTXService } from '@/infra/services/PPTXService';
+import { PDFService } from '@/infra/services/PDFService';
+import { DIContainer } from '@/di/container';
+import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
+import { Dialog, DialogContent, DialogTrigger } from '@/view/components/ui/dialog';
 
 const UnidadeDetailScreen = () => {
     const { unidadeId } = useParams<{ unidadeId: string }>();
@@ -54,9 +61,17 @@ const UnidadeDetailScreen = () => {
                         <CardContent>
                             {unidade.plano_aula ? (
                                 <div className="space-y-4 pt-4">
-                                    <h3 className="font-semibold">{unidade.plano_aula.titulo}</h3>
-                                    <Badge variant="outline">Gerado em: {new Date(unidade.plano_aula.created_at).toLocaleDateString()}</Badge>
-                                    <Button variant="outline" className="w-full">Visualizar</Button>
+                                    <ContentEditor
+                                        title={unidade.plano_aula.titulo}
+                                        initialContent={unidade.plano_aula.conteudo || ''}
+                                        onSave={async (content) => {
+                                            if (!unidade.plano_aula) return;
+                                            await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo: content });
+                                        }}
+                                        onExport={() => unidade.plano_aula && PPTXService.generateLessonPlanPPTX(unidade.plano_aula.titulo, unidade.plano_aula.conteudo || '')}
+                                        exportLabel="Baixar PPTX"
+                                    />
+                                    <Badge variant="outline" className="mt-2">Gerado em: {new Date(unidade.plano_aula.created_at).toLocaleDateString()}</Badge>
                                 </div>
                             ) : (
                                 <div className="pt-4">
@@ -75,7 +90,7 @@ const UnidadeDetailScreen = () => {
                     </Card>
 
                     {/* Atividade Avaliativa */}
-                    <Card>
+                    <Card className="col-span-1 md:col-span-2 lg:col-span-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Atividade</CardTitle>
                             <ClipboardList className="h-4 w-4 text-muted-foreground" />
@@ -83,9 +98,26 @@ const UnidadeDetailScreen = () => {
                         <CardContent>
                             {unidade.atividade_avaliativa ? (
                                 <div className="space-y-4 pt-4">
-                                    <h3 className="font-semibold">{unidade.atividade_avaliativa.titulo}</h3>
-                                    <Badge variant="outline">Pontuação: {unidade.atividade_avaliativa.pontuacao_total}</Badge>
-                                    <Button variant="outline" className="w-full">Visualizar</Button>
+                                    <ContentEditor
+                                        title={unidade.atividade_avaliativa.titulo}
+                                        initialContent={JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2)}
+                                        onSave={async (content) => {
+                                            if (!unidade.atividade_avaliativa) return;
+                                            try {
+                                                const parsed = JSON.parse(content);
+                                                await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
+                                            } catch (e) {
+                                                console.error("Invalid JSON");
+                                                alert("JSON inválido");
+                                                throw e;
+                                            }
+                                        }}
+                                        onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2))}
+                                        exportLabel="Baixar PDF"
+                                    />
+                                    <div className="flex gap-2 items-center mt-2">
+                                        <Badge variant="outline">Pontuação: {unidade.atividade_avaliativa.pontuacao_total}</Badge>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="pt-4">
@@ -122,6 +154,14 @@ const UnidadeDetailScreen = () => {
                                     Gerar Slides
                                 </Button>
                             </div>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="w-full mt-2">Visualizar Slides</Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl w-full">
+                                    <ViewComponentsSlidesViewer title={`Slides: ${unidade.tema}`} />
+                                </DialogContent>
+                            </Dialog>
                         </CardContent>
                     </Card>
                 </div>

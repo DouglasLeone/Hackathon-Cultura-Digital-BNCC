@@ -32,6 +32,7 @@ export interface PlanoAula {
   recursos_didaticos: string[];
   avaliacao: string;
   referencias?: string;
+  conteudo?: string; // For the full markdown content
   created_at: string;
   updated_at: string;
 }
@@ -67,8 +68,8 @@ export interface HistoricoGeracao {
   disciplina_id?: string;
   unidade_id?: string;
   created_at: string;
-  disciplina?: { nome: string };
-  unidade?: { tema: string };
+  disciplina?: { nome: string }; // Joined
+  unidade?: { tema: string }; // Joined
 }
 
 export const SERIES_OPTIONS = [

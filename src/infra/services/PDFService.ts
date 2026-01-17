@@ -40,4 +40,37 @@ export class PDFService {
 
         doc.save(`${item.titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
     }
+
+    static async generateActivityPDF(title: string, content: string) {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(40, 40, 40);
+        doc.text("Aula Criativa AI", 105, 20, { align: 'center' });
+
+        doc.setFontSize(16);
+        doc.text(title, 105, 30, { align: 'center' });
+
+        doc.setDrawColor(0, 0, 0);
+        doc.line(20, 35, 190, 35);
+
+        // Content
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+
+        const splitText = doc.splitTextToSize(content || "Sem conteúdo.", 170);
+        doc.text(splitText, 20, 50);
+
+        // Footer
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Gerado por Aula Criativa AI', 105, 290, { align: 'center' });
+        }
+
+        doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+    }
 }

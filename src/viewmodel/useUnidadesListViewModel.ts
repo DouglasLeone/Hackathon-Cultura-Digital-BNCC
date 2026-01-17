@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
 import { Unidade, Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
@@ -9,7 +9,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
-    const loadUnidades = async () => {
+    const loadUnidades = useCallback(async () => {
         setLoading(true);
         try {
             let data: Unidade[];
@@ -29,7 +29,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [disciplinaId, toast]);
 
     const deleteUnidade = async (id: string) => {
         try {
@@ -104,7 +104,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
 
     useEffect(() => {
         loadUnidades();
-    }, [disciplinaId]);
+    }, [loadUnidades]);
 
     return {
         unidades,
