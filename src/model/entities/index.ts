@@ -67,6 +67,8 @@ export interface HistoricoGeracao {
   disciplina_id?: string;
   unidade_id?: string;
   created_at: string;
+  disciplina?: { nome: string };
+  unidade?: { tema: string };
 }
 
 export const SERIES_OPTIONS = [
