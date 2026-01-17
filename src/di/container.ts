@@ -21,6 +21,8 @@ import { GenerateAtividadeUseCase } from '../usecase/GenerateAtividadeUseCase';
 import { GenerateSlidesUseCase } from '../usecase/GenerateSlidesUseCase';
 import { UpdatePlanoAulaUseCase } from '../usecase/UpdatePlanoAulaUseCase';
 import { UpdateAtividadeUseCase } from '../usecase/UpdateAtividadeUseCase';
+import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUseCase';
+import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
 
 class DIContainer {
     private static _genIARepository = new SupabaseGenIARepository();

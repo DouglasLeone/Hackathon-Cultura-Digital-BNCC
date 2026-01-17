@@ -252,7 +252,7 @@ export async function addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'cre
   const { data, error } = await supabase
     .from('historico_geracoes')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .insert(insertData as any)
+    .insert(insertData as unknown as any)
     .select()
     .single();
 
