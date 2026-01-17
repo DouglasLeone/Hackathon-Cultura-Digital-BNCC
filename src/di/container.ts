@@ -20,6 +20,7 @@ import { GeneratePlanoAulaUseCase } from '../usecase/GeneratePlanoAulaUseCase';
 import { GenerateAtividadeUseCase } from '../usecase/GenerateAtividadeUseCase';
 import { GenerateSlidesUseCase } from '../usecase/GenerateSlidesUseCase';
 import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUseCase';
+import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
 
 class DIContainer {
     private static _genIARepository = new SupabaseGenIARepository();
@@ -27,8 +28,13 @@ class DIContainer {
     private static _unidadeRepository = new SupabaseUnidadeRepository();
     private static _aiService = new MockAIService();
 
-    private static _getHomeDataUseCase = new GetHomeDataUseCase(this._genIARepository);
+    private static _getHomeDataUseCase = new GetHomeDataUseCase(
+        this._genIARepository,
+        this._disciplinaRepository,
+        this._unidadeRepository
+    );
     private static _logMaterialGenerationUseCase = new LogMaterialGenerationUseCase(this._genIARepository);
+    private static _deleteHistoricoUseCase = new DeleteHistoricoUseCase(this._genIARepository);
     private static _getAllDisciplinasUseCase = new GetAllDisciplinasUseCase(this._disciplinaRepository);
     private static _getDisciplinaByIdUseCase = new GetDisciplinaByIdUseCase(this._disciplinaRepository);
     private static _createDisciplinaUseCase = new CreateDisciplinaUseCase(this._disciplinaRepository);
@@ -53,6 +59,10 @@ class DIContainer {
 
     static get logMaterialGenerationUseCase() {
         return this._logMaterialGenerationUseCase;
+    }
+
+    static get deleteHistoricoUseCase() {
+        return this._deleteHistoricoUseCase;
     }
 
     static get getHomeDataUseCase() {
