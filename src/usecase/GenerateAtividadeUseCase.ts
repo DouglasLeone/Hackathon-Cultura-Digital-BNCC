@@ -11,11 +11,19 @@ export class GenerateAtividadeUseCase {
 
     async execute(unidade: Unidade) {
         const generatedAtividade = await this.aiService.generateAtividade(unidade);
-        // Persist the generated activity
-        const savedAtividade = await this.repository.createAtividade({
-            ...generatedAtividade,
+
+        // Ensure defaults for required fields
+        const atividadeToSave = {
+            titulo: generatedAtividade.titulo || `Atividade: ${unidade.tema}`,
+            tipo: generatedAtividade.tipo || 'Exercício',
+            instrucoes: generatedAtividade.instrucoes || 'Responda as questões abaixo.',
+            questoes: generatedAtividade.questoes || [],
+            criterios_avaliacao: generatedAtividade.criterios_avaliacao || '',
+            pontuacao_total: generatedAtividade.pontuacao_total || 10,
             unidade_id: unidade.id
-        });
+        };
+
+        const savedAtividade = await this.repository.createAtividade(atividadeToSave);
         return savedAtividade;
     }
 }
