@@ -9,8 +9,10 @@ import {
     deleteUnidade,
     getPlanoAulaByUnidade,
     createPlanoAula,
+    updatePlanoAula,
     getAtividadeByUnidade,
-    createAtividade
+    createAtividade,
+    updateAtividade
 } from '../data/database';
 import { Unidade, PlanoAula, AtividadeAvaliativa } from '../../model/entities';
 
@@ -53,5 +55,13 @@ export class SupabaseUnidadeRepository implements IUnidadeRepository {
 
     async createAtividade(atividade: Omit<AtividadeAvaliativa, 'id' | 'created_at' | 'updated_at'>): Promise<AtividadeAvaliativa> {
         return await createAtividade(atividade);
+    }
+
+    async updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<PlanoAula> {
+        return await updatePlanoAula(id, plano);
+    }
+
+    async updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<AtividadeAvaliativa> {
+        return await updateAtividade(id, atividade);
     }
 }

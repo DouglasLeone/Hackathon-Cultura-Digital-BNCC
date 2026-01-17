@@ -18,7 +18,7 @@ export class MockAIService implements IAIService {
         return suggestions;
     }
 
-    async generatePlanoAula(unidade: Unidade): Promise<any> {
+    async generatePlanoAula(unidade: Unidade): Promise<Partial<import('../../model/entities').PlanoAula>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             titulo: `Plano de Aula: ${unidade.tema}`,
@@ -26,12 +26,12 @@ export class MockAIService implements IAIService {
             objetivos: ["Compreender conceitos básicos", "Aplicar conhecimento em situações reais"],
             conteudo_programatico: "Introdução, Desenvolvimento, Prática, Encerramento",
             metodologia: "Aula expositiva dialogada e atividades em grupo",
-            recursos_didacticos: ["Quadro branco", "Projetor", "Tablets"],
+            recursos_didaticos: ["Quadro branco", "Projetor", "Tablets"],
             avaliacao: "Participação em aula e exercícios práticos"
         };
     }
 
-    async generateAtividade(unidade: Unidade): Promise<any> {
+    async generateAtividade(unidade: Unidade): Promise<Partial<import('../../model/entities').AtividadeAvaliativa>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             titulo: `Atividade: ${unidade.tema}`,
@@ -57,7 +57,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async generateSlides(unidade: Unidade): Promise<any> {
+    async generateSlides(unidade: Unidade): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             titulo: `Slides: ${unidade.tema}`,

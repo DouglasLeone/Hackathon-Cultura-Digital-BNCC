@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
 import { Unidade, PlanoAula, AtividadeAvaliativa } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
@@ -10,7 +10,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const [generating, setGenerating] = useState<string | null>(null); // 'plano', 'atividade', 'slides'
     const { toast } = useToast();
 
-    const loadUnidade = async () => {
+    const loadUnidade = useCallback(async () => {
         if (!unidadeId) return;
         setLoading(true);
         try {
@@ -26,7 +26,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [unidadeId, toast]);
 
     const generatePlanoAula = async () => {
         if (!unidade) return;
@@ -124,7 +124,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
 
     useEffect(() => {
         loadUnidade();
-    }, [unidadeId]);
+    }, [loadUnidade]);
 
     return {
         unidade,
