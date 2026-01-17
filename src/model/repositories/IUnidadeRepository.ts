@@ -12,6 +12,8 @@ export interface IUnidadeRepository {
     // Linked materials
     getPlanoAula(unidadeId: string): Promise<PlanoAula | null>;
     createPlanoAula(plano: Omit<PlanoAula, 'id' | 'created_at' | 'updated_at'>): Promise<PlanoAula>;
+    updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<PlanoAula>;
     getAtividade(unidadeId: string): Promise<AtividadeAvaliativa | null>;
     createAtividade(atividade: Omit<AtividadeAvaliativa, 'id' | 'created_at' | 'updated_at'>): Promise<AtividadeAvaliativa>;
+    updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<AtividadeAvaliativa>;
 }

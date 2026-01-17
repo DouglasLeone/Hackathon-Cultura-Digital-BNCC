@@ -19,6 +19,8 @@ import { DeleteUnidadeUseCase } from '../usecase/DeleteUnidadeUseCase';
 import { GeneratePlanoAulaUseCase } from '../usecase/GeneratePlanoAulaUseCase';
 import { GenerateAtividadeUseCase } from '../usecase/GenerateAtividadeUseCase';
 import { GenerateSlidesUseCase } from '../usecase/GenerateSlidesUseCase';
+import { UpdatePlanoAulaUseCase } from '../usecase/UpdatePlanoAulaUseCase';
+import { UpdateAtividadeUseCase } from '../usecase/UpdateAtividadeUseCase';
 
 class DIContainer {
     private static _genIARepository = new SupabaseGenIARepository();
@@ -43,6 +45,8 @@ class DIContainer {
     private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService);
     private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService);
     private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService);
+    private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository);
+    private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository);
 
 
     static get genIARepository() {
@@ -111,6 +115,14 @@ class DIContainer {
 
     static get generateSlidesUseCase() {
         return this._generateSlidesUseCase;
+    }
+
+    static get updatePlanoAulaUseCase() {
+        return this._updatePlanoAulaUseCase;
+    }
+
+    static get updateAtividadeUseCase() {
+        return this._updateAtividadeUseCase;
     }
 }
 

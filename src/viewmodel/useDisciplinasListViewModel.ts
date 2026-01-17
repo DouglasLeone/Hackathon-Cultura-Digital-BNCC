@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
@@ -9,7 +9,7 @@ export const useDisciplinasListViewModel = () => {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
-    const loadDisciplinas = async () => {
+    const loadDisciplinas = useCallback(async () => {
         setLoading(true);
         try {
             const data = await DIContainer.getAllDisciplinasUseCase.execute();
@@ -24,7 +24,7 @@ export const useDisciplinasListViewModel = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
     const deleteDisciplina = async (id: string) => {
         try {
@@ -46,7 +46,7 @@ export const useDisciplinasListViewModel = () => {
 
     useEffect(() => {
         loadDisciplinas();
-    }, []);
+    }, [loadDisciplinas]);
 
     return {
         disciplinas,

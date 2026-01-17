@@ -179,7 +179,7 @@ export async function getAtividadeByUnidade(unidadeId: string): Promise<Atividad
     .maybeSingle();
 
   if (error) throw error;
-  
+
   if (data) {
     return {
       ...data,
@@ -242,18 +242,20 @@ export async function getHistorico(): Promise<HistoricoGeracao[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []) as HistoricoGeracao[];
+  return (data || []) as unknown as HistoricoGeracao[];
 }
 
 export async function addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'created_at'>): Promise<HistoricoGeracao> {
+  const { disciplina, unidade, ...insertData } = historico;
   const { data, error } = await supabase
     .from('historico_geracoes')
-    .insert(historico)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert(insertData as any)
     .select()
     .single();
 
   if (error) throw error;
-  return data as HistoricoGeracao;
+  return data as unknown as HistoricoGeracao;
 }
 
 // Estatísticas
