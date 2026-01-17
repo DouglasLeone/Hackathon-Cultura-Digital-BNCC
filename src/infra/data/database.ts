@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Disciplina, Unidade, PlanoAula, AtividadeAvaliativa, HistoricoGeracao, Questao } from '@/model/entities';
+import { DisciplinaDTO, UnidadeDTO, UnidadeWithDisciplinaDTO, HistoricoGeracaoDTO } from '@/model/dtos';
 
 // Disciplinas
 export async function getDisciplinas(): Promise<Disciplina[]> {
@@ -235,6 +236,7 @@ export async function updateAtividade(id: string, atividade: Partial<AtividadeAv
 }
 
 // Histórico
+// Histórico
 export async function getHistorico(): Promise<HistoricoGeracao[]> {
   const { data, error } = await supabase
     .from('historico_geracoes')
@@ -256,6 +258,15 @@ export async function addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'cre
 
   if (error) throw error;
   return data as unknown as HistoricoGeracao;
+}
+
+export async function deleteHistorico(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('historico_geracoes')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 // Estatísticas
