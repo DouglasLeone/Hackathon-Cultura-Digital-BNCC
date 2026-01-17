@@ -9,4 +9,6 @@ export interface IGenIARepository {
         atividades: number;
     }>;
     getHistorico(): Promise<HistoricoGeracao[]>;
+    addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'created_at'>): Promise<HistoricoGeracao>;
+    deleteHistorico(id: string): Promise<void>;
 }

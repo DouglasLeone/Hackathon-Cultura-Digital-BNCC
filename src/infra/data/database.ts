@@ -179,7 +179,7 @@ export async function getAtividadeByUnidade(unidadeId: string): Promise<Atividad
     .maybeSingle();
 
   if (error) throw error;
-  
+
   if (data) {
     return {
       ...data,
@@ -235,6 +235,7 @@ export async function updateAtividade(id: string, atividade: Partial<AtividadeAv
 }
 
 // Histórico
+// Histórico
 export async function getHistorico(): Promise<HistoricoGeracao[]> {
   const { data, error } = await supabase
     .from('historico_geracoes')
@@ -242,18 +243,27 @@ export async function getHistorico(): Promise<HistoricoGeracao[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []) as HistoricoGeracao[];
+  return (data as unknown) as HistoricoGeracao[];
 }
 
 export async function addHistorico(historico: Omit<HistoricoGeracao, 'id' | 'created_at'>): Promise<HistoricoGeracao> {
   const { data, error } = await supabase
     .from('historico_geracoes')
-    .insert(historico)
+    .insert(historico as any) // Type assertion to bypass strict inference mismatch if optional fields differ
     .select()
     .single();
 
   if (error) throw error;
   return data as HistoricoGeracao;
+}
+
+export async function deleteHistorico(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('historico_geracoes')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 // Estatísticas
