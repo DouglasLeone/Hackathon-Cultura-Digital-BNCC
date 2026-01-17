@@ -1,7 +1,7 @@
 
-import { SupabaseGenIARepository } from '../infra/repositories/SupabaseGenIARepository';
-import { SupabaseDisciplinaRepository } from '../infra/repositories/SupabaseDisciplinaRepository';
-import { SupabaseUnidadeRepository } from '../infra/repositories/SupabaseUnidadeRepository';
+import { InMemoryGenIARepository } from '../infra/repositories/InMemoryGenIARepository';
+import { InMemoryDisciplinaRepository } from '../infra/repositories/InMemoryDisciplinaRepository';
+import { InMemoryUnidadeRepository } from '../infra/repositories/InMemoryUnidadeRepository';
 import { MockAIService } from '../infra/services/MockAIService';
 import { GetHomeDataUseCase } from '../usecase/GetHomeDataUseCase';
 import { GetAllDisciplinasUseCase } from '../usecase/GetAllDisciplinasUseCase';
@@ -25,9 +25,9 @@ import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUs
 import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
 
 class DIContainer {
-    private static _genIARepository = new SupabaseGenIARepository();
-    private static _disciplinaRepository = new SupabaseDisciplinaRepository();
-    private static _unidadeRepository = new SupabaseUnidadeRepository();
+    private static _genIARepository = new InMemoryGenIARepository();
+    private static _disciplinaRepository = new InMemoryDisciplinaRepository();
+    private static _unidadeRepository = new InMemoryUnidadeRepository();
     private static _aiService = new MockAIService();
 
     private static _getHomeDataUseCase = new GetHomeDataUseCase(
