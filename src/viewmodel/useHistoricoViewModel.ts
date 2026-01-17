@@ -46,7 +46,7 @@ export const useHistoricoViewModel = () => {
     const deleteMutation = useMutation({
         mutationFn: (id: string) => DIContainer.deleteHistoricoUseCase.execute(id),
         onSuccess: (_, id) => {
-            queryClient.setQueryData(['historico'], (old: any[]) => old.filter((item: any) => item.id !== id));
+            queryClient.setQueryData(['historico'], (old: { id: string }[]) => old.filter((item) => item.id !== id));
             toast({
                 title: "Sucesso",
                 description: "Item removido do histórico.",
