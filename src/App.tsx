@@ -9,6 +9,7 @@ import DisciplinasListScreen from "./view/screens/DisciplinasListScreen";
 import DisciplinaDetailScreen from "./view/screens/DisciplinaDetailScreen";
 import UnidadeDetailScreen from "./view/screens/UnidadeDetailScreen";
 import UnidadesScreen from "./view/screens/UnidadesScreen";
+import GerarMaterialScreen from "./view/screens/GerarMaterialScreen";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/disciplinas/:id" element={<DisciplinaDetailScreen />} />
           <Route path="/disciplinas/:disciplinaId/unidades/:unidadeId" element={<UnidadeDetailScreen />} />
           <Route path="/unidades" element={<UnidadesScreen />} />
+          <Route path="/gerar" element={<GerarMaterialScreen />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFoundScreen />} />
         </Routes>
