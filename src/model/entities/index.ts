@@ -32,6 +32,7 @@ export interface PlanoAula {
   recursos_didaticos: string[];
   avaliacao: string;
   referencias?: string;
+  conteudo?: string; // For the full markdown content
   created_at: string;
   updated_at: string;
 }
@@ -60,10 +61,15 @@ export interface AtividadeAvaliativa {
 
 export interface HistoricoGeracao {
   id: string;
-  tipo: 'plano_aula' | 'atividade' | 'slides';
+  tipo: 'plano_aula' | 'atividade' | 'slides' | 'sugestao_unidade';
   titulo: string;
-  referencia_id: string;
+  descricao?: string;
+  referencia_id?: string;
+  disciplina_id?: string;
+  unidade_id?: string;
   created_at: string;
+  disciplina?: { nome: string }; // Joined
+  unidade?: { tema: string }; // Joined
 }
 
 export const SERIES_OPTIONS = [
