@@ -33,7 +33,7 @@ export const useGerarMaterialViewModel = () => {
             }
         };
         loadToData();
-    }, []);
+    }, [toast]);
 
     const gerarPlanoAula = async (unidadeId: string, instrucoes?: string) => {
         setLoading(true);
