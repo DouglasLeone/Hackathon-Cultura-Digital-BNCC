@@ -23,3 +23,5 @@ Arquivos/
 *.njsproj
 *.sln
 *.sw?
+
+*.env
