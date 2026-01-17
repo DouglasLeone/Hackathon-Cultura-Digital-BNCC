@@ -32,12 +32,13 @@ const UnidadeDetailScreen = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Link to={`/disciplinas/${unidade.disciplina_id}`} className="text-muted-foreground hover:text-primary">
-                                <ArrowLeft className="w-4 h-4" />
-                                Voltar para Disciplina
-                            </Link>
-                        </div>
+                        <Link
+                            to={`/disciplinas/${unidade.disciplina_id}`}
+                            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Voltar para Disciplina
+                        </Link>
                         <h1 className="text-3xl font-bold edu-gradient-text">{unidade.tema}</h1>
                         <p className="text-muted-foreground mt-2">{unidade.contexto_cultura_digital}</p>
                     </div>
