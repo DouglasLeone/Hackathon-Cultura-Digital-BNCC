@@ -10,6 +10,7 @@ import { Trash2, Search, FileText, ClipboardList, MonitorPlay, Calendar, Downloa
 import { useHistoricoViewModel } from '@/viewmodel/useHistoricoViewModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/view/components/ui/dialog';
 import { HistoricoGeracao } from '@/model/entities';
+import { PDFService } from '@/infra/services/PDFService';
 
 const HistoricoScreen = () => {
     const {
@@ -231,7 +232,7 @@ const HistoricoScreen = () => {
                             </div>
 
                             <div className="flex justify-end gap-2 pt-4">
-                                <Button variant="outline" onClick={() => alert("Funcionalidade de Download em breve!")}>
+                                <Button variant="outline" onClick={() => selectedItem && PDFService.generatePDF(selectedItem)}>
                                     <Download className="w-4 h-4 mr-2" />
                                     Download PDF
                                 </Button>

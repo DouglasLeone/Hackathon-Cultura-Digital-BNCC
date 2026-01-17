@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Disciplina, Unidade, PlanoAula, AtividadeAvaliativa, HistoricoGeracao, Questao } from '@/model/entities';
+import { DisciplinaDTO, UnidadeDTO, UnidadeWithDisciplinaDTO, HistoricoGeracaoDTO } from '@/model/dtos';
 
 // Disciplinas
 export async function getDisciplinas(): Promise<Disciplina[]> {
