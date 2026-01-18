@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BookOpen, GraduationCap, Home, History, Lightbulb, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, Home, History, Lightbulb, Sparkles, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { icon: GraduationCap, label: 'Unidades', path: '/unidades' },
   { icon: Sparkles, label: 'Gerar Material', path: '/gerar' },
   { icon: History, label: 'Histórico', path: '/historico' },
+  { icon: Settings, label: 'Configurações', path: '/configuracoes' },
 ];
 
 export function Sidebar() {
