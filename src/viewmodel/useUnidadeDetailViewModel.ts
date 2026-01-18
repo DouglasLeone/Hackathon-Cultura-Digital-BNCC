@@ -28,11 +28,14 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     }, [unidadeId, toast]);
 
+    const getUserId = () => localStorage.getItem('user_id');
+
     const generatePlanoAula = async () => {
         if (!unidade) return;
         setGenerating('plano');
         try {
-            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade);
+            const userId = getUserId();
+            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId || undefined);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'plano_aula',
@@ -64,7 +67,8 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('atividade');
         try {
-            const result = await DIContainer.generateAtividadeUseCase.execute(unidade);
+            const userId = getUserId();
+            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId || undefined);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'atividade',

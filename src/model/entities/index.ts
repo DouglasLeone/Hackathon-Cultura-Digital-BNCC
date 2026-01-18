@@ -72,6 +72,15 @@ export interface HistoricoGeracao {
   unidade?: { tema: string }; // Joined
 }
 
+export type NivelEnsino = 'Ensino Fundamental' | 'Ensino Médio';
+
+export interface UserContext {
+  id: string; // user_id (local or auth)
+  niveis_ensino: NivelEnsino[];
+  created_at: string;
+  updated_at: string;
+}
+
 export const SERIES_OPTIONS = [
   '1º Ano - Ensino Fundamental',
   '2º Ano - Ensino Fundamental',

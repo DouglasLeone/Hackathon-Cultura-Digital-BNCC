@@ -11,6 +11,8 @@ import UnidadeDetailScreen from "./view/screens/UnidadeDetailScreen";
 import UnidadesScreen from "./view/screens/UnidadesScreen";
 import GerarMaterialScreen from "./view/screens/GerarMaterialScreen";
 import HistoricoScreen from "./view/screens/HistoricoScreen";
+import SettingsScreen from "./view/screens/SettingsScreen";
+import { OnboardingModal } from "./view/components/onboarding/OnboardingModal";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <OnboardingModal />
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/disciplinas" element={<DisciplinasListScreen />} />
@@ -28,6 +31,7 @@ const App = () => (
           <Route path="/unidades" element={<UnidadesScreen />} />
           <Route path="/gerar" element={<GerarMaterialScreen />} />
           <Route path="/historico" element={<HistoricoScreen />} />
+          <Route path="/configuracoes" element={<SettingsScreen />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFoundScreen />} />
         </Routes>
