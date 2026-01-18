@@ -1,7 +1,7 @@
 
-import { InMemoryGenIARepository } from '../infra/repositories/InMemoryGenIARepository';
-import { InMemoryDisciplinaRepository } from '../infra/repositories/InMemoryDisciplinaRepository';
-import { InMemoryUnidadeRepository } from '../infra/repositories/InMemoryUnidadeRepository';
+import { FirestoreGenIARepository } from '../infra/repositories/firestore/FirestoreGenIARepository';
+import { FirestoreDisciplinaRepository } from '../infra/repositories/firestore/FirestoreDisciplinaRepository';
+import { FirestoreUnidadeRepository } from '../infra/repositories/firestore/FirestoreUnidadeRepository';
 import { MockAIService } from '../infra/services/MockAIService';
 import { GetHomeDataUseCase } from '../usecase/GetHomeDataUseCase';
 import { GetAllDisciplinasUseCase } from '../usecase/GetAllDisciplinasUseCase';
@@ -25,9 +25,9 @@ import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUs
 import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
 
 class DIContainer {
-    private static _genIARepository = new InMemoryGenIARepository();
-    private static _disciplinaRepository = new InMemoryDisciplinaRepository();
-    private static _unidadeRepository = new InMemoryUnidadeRepository();
+    private static _genIARepository = new FirestoreGenIARepository();
+    private static _disciplinaRepository = new FirestoreDisciplinaRepository();
+    private static _unidadeRepository = new FirestoreUnidadeRepository();
     private static _aiService = new MockAIService();
 
     private static _getHomeDataUseCase = new GetHomeDataUseCase(
