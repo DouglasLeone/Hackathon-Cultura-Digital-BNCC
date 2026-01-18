@@ -35,14 +35,17 @@ export const useGerarMaterialViewModel = () => {
         loadToData();
     }, [toast]);
 
+    const getUserId = () => localStorage.getItem('user_id');
+
     const gerarPlanoAula = async (unidadeId: string, instrucoes?: string) => {
         setLoading(true);
         try {
             const unidade = unidades.find(u => u.id === unidadeId);
             if (!unidade) throw new Error("Unidade não encontrada");
+            const userId = getUserId();
 
             // 1. Generate Plan
-            const plano = await DIContainer.generatePlanoAulaUseCase.execute(unidade);
+            const plano = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId || undefined);
 
             // 2. Log History
             await DIContainer.logMaterialGenerationUseCase.execute({
@@ -77,9 +80,10 @@ export const useGerarMaterialViewModel = () => {
         try {
             const unidade = unidades.find(u => u.id === unidadeId);
             if (!unidade) throw new Error("Unidade não encontrada");
+            const userId = getUserId();
 
             // 1. Generate Activity
-            const atividade = await DIContainer.generateAtividadeUseCase.execute(unidade);
+            const atividade = await DIContainer.generateAtividadeUseCase.execute(unidade, userId || undefined);
 
             // 2. Log History
             await DIContainer.logMaterialGenerationUseCase.execute({
@@ -114,8 +118,9 @@ export const useGerarMaterialViewModel = () => {
         try {
             const disciplina = disciplinas.find(d => d.id === disciplinaId);
             if (!disciplina) throw new Error("Disciplina não encontrada");
+            const userId = getUserId();
 
-            const suggestions = await DIContainer.suggestUnidadesUseCase.execute(disciplina);
+            const suggestions = await DIContainer.suggestUnidadesUseCase.execute(disciplina, userId || undefined);
 
             // Note: Suggestions are just strings, not entities saved yet. 
             // We might not log history for suggestions unless saved? 

@@ -1,16 +1,21 @@
-
 import { IUnidadeRepository } from '../model/repositories/IUnidadeRepository';
+import { IUserRepository } from '../model/repositories/IUserRepository';
 import { IAIService } from '../model/services/IAIService';
 import { Unidade } from '../model/entities';
 
 export class GeneratePlanoAulaUseCase {
     constructor(
         private repository: IUnidadeRepository,
-        private aiService: IAIService
+        private aiService: IAIService,
+        private userRepository: IUserRepository
     ) { }
 
-    async execute(unidade: Unidade) {
-        const generatedPlano = await this.aiService.generatePlanoAula(unidade);
+    async execute(unidade: Unidade, userId?: string) {
+        let context;
+        if (userId) {
+            context = await this.userRepository.getUserContext(userId) || undefined;
+        }
+        const generatedPlano = await this.aiService.generatePlanoAula(unidade, context);
 
         // Ensure defaults for required fields if AI returns partial data
         const planoToSave = {
