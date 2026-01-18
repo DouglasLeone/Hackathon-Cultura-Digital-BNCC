@@ -23,11 +23,16 @@ import { UpdatePlanoAulaUseCase } from '../usecase/UpdatePlanoAulaUseCase';
 import { UpdateAtividadeUseCase } from '../usecase/UpdateAtividadeUseCase';
 import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUseCase';
 import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
+import { FirestoreUserRepository } from '../infra/repositories/firestore/FirestoreUserRepository';
+import { GetUserContextUseCase } from '../usecase/GetUserContextUseCase';
+import { CreateUserContextUseCase } from '../usecase/CreateUserContextUseCase';
+import { UpdateUserContextUseCase } from '../usecase/UpdateUserContextUseCase';
 
 class DIContainer {
     private static _genIARepository = new FirestoreGenIARepository();
     private static _disciplinaRepository = new FirestoreDisciplinaRepository();
     private static _unidadeRepository = new FirestoreUnidadeRepository();
+    private static _userRepository = new FirestoreUserRepository();
     private static _aiService = new MockAIService();
 
     private static _getHomeDataUseCase = new GetHomeDataUseCase(
@@ -42,7 +47,7 @@ class DIContainer {
     private static _createDisciplinaUseCase = new CreateDisciplinaUseCase(this._disciplinaRepository);
     private static _updateDisciplinaUseCase = new UpdateDisciplinaUseCase(this._disciplinaRepository);
     private static _deleteDisciplinaUseCase = new DeleteDisciplinaUseCase(this._disciplinaRepository);
-    private static _suggestUnidadesUseCase = new SuggestUnidadesUseCase(this._aiService);
+    private static _suggestUnidadesUseCase = new SuggestUnidadesUseCase(this._aiService, this._userRepository);
 
     private static _getAllUnidadesUseCase = new GetAllUnidadesUseCase(this._unidadeRepository);
     private static _getUnidadesByDisciplinaUseCase = new GetUnidadesByDisciplinaUseCase(this._unidadeRepository);
@@ -50,11 +55,15 @@ class DIContainer {
     private static _createUnidadeUseCase = new CreateUnidadeUseCase(this._unidadeRepository);
     private static _updateUnidadeUseCase = new UpdateUnidadeUseCase(this._unidadeRepository);
     private static _deleteUnidadeUseCase = new DeleteUnidadeUseCase(this._unidadeRepository);
-    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService);
-    private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService);
+    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository);
+    private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository);
     private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService);
     private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository);
     private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository);
+
+    private static _getUserContextUseCase = new GetUserContextUseCase(this._userRepository);
+    private static _createUserContextUseCase = new CreateUserContextUseCase(this._userRepository);
+    private static _updateUserContextUseCase = new UpdateUserContextUseCase(this._userRepository);
 
 
     static get genIARepository() {
@@ -139,6 +148,18 @@ class DIContainer {
 
     static get updateAtividadeUseCase() {
         return this._updateAtividadeUseCase;
+    }
+
+    static get getUserContextUseCase() {
+        return this._getUserContextUseCase;
+    }
+
+    static get createUserContextUseCase() {
+        return this._createUserContextUseCase;
+    }
+
+    static get updateUserContextUseCase() {
+        return this._updateUserContextUseCase;
     }
 }
 

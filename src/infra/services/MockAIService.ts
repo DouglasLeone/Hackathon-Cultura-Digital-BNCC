@@ -3,13 +3,15 @@ import { IAIService } from '../../model/services/IAIService';
 import { Disciplina, Unidade } from '../../model/entities';
 
 export class MockAIService implements IAIService {
-    async suggestUnidades(disciplina: Disciplina): Promise<string[]> {
+    async suggestUnidades(disciplina: Disciplina, context?: import('../../model/entities').UserContext): Promise<string[]> {
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1500));
 
+        const nivelSuffix = context?.niveis_ensino?.length ? ` (${context.niveis_ensino.join(', ')})` : '';
+
         const suggestions = [
-            `Introdução a ${disciplina.nome}`,
-            `Fundamentos de ${disciplina.nome} no cotidiano`,
+            `Introdução a ${disciplina.nome}${nivelSuffix}`,
+            `Fundamentos de ${disciplina.nome} no cotidiano${nivelSuffix}`,
             `${disciplina.nome} e a Cultura Digital`,
             `Aplicações práticas de ${disciplina.nome}`,
             `Projeto Integrador: ${disciplina.nome} e Sociedade`
@@ -18,23 +20,33 @@ export class MockAIService implements IAIService {
         return suggestions;
     }
 
-    async generatePlanoAula(unidade: Unidade): Promise<Partial<import('../../model/entities').PlanoAula>> {
+    async generatePlanoAula(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').PlanoAula>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const nivelContext = context?.niveis_ensino?.length
+            ? `\n\nAdaptado para: ${context.niveis_ensino.join(', ')}`
+            : '';
+
         return {
             titulo: `Plano de Aula: ${unidade.tema}`,
             duracao: "50 minutos",
             objetivos: ["Compreender conceitos básicos", "Aplicar conhecimento em situações reais"],
-            conteudo_programatico: "Introdução, Desenvolvimento, Prática, Encerramento",
+            conteudo_programatico: "Introdução, Desenvolvimento, Prática, Encerramento" + nivelContext,
             metodologia: "Aula expositiva dialogada e atividades em grupo",
             recursos_didaticos: ["Quadro branco", "Projetor", "Tablets"],
             avaliacao: "Participação em aula e exercícios práticos"
         };
     }
 
-    async generateAtividade(unidade: Unidade): Promise<Partial<import('../../model/entities').AtividadeAvaliativa>> {
+    async generateAtividade(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').AtividadeAvaliativa>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
+
+        const nivelContext = context?.niveis_ensino?.length
+            ? ` (Nível: ${context.niveis_ensino.join(', ')})`
+            : '';
+
         return {
-            titulo: `Atividade: ${unidade.tema}`,
+            titulo: `Atividade: ${unidade.tema}${nivelContext}`,
             tipo: "Lista de Exercícios",
             instrucoes: "Responda as questões abaixo com base no conteúdo da aula.",
             questoes: [
@@ -57,7 +69,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async generateSlides(unidade: Unidade): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
+    async generateSlides(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             titulo: `Slides: ${unidade.tema}`,
