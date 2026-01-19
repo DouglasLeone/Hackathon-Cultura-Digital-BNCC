@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
-import { Disciplina } from '../model/entities';
+import { Disciplina, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 
-export const useDisciplinasListViewModel = (areaFilter?: string) => {
+export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: string, nivelFilter?: string) => {
     const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -12,20 +12,30 @@ export const useDisciplinasListViewModel = (areaFilter?: string) => {
     const loadDisciplinas = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await DIContainer.getAllDisciplinasUseCase.execute(areaFilter);
+            // First fetch by Area (if provided) or all
+            let data = await DIContainer.getAllDisciplinasUseCase.execute(areaFilter);
+
+            // Filter by Serie
+            if (serieFilter && serieFilter !== 'all') {
+                data = data.filter(d => d.serie === serieFilter);
+            }
+
+            // Filter by Nivel
+            if (nivelFilter && nivelFilter !== 'all') {
+                if (nivelFilter === 'Ensino Fundamental') {
+                    data = data.filter(d => SERIES_FUNDAMENTAL.some(s => s === d.serie));
+                } else if (nivelFilter === 'Ensino Médio') {
+                    data = data.filter(d => SERIES_MEDIO.some(s => s === d.serie));
+                }
+            }
+
             setDisciplinas(data);
         } catch (error) {
             console.error('Error fetching disciplinas:', error);
-            // Suppressing error toast as requested for empty states or minor issues
-            // toast({
-            //     title: "Erro",
-            //     description: "Não foi possível carregar as disciplinas.",
-            //     variant: "destructive",
-            // });
         } finally {
             setLoading(false);
         }
-    }, [toast, areaFilter]);
+    }, [toast, areaFilter, serieFilter, nivelFilter]);
 
     const deleteDisciplina = async (id: string) => {
         try {
