@@ -16,8 +16,13 @@ import { DisciplinaForm } from '@/view/components/disciplinas/DisciplinaForm';
 import { useDisciplinaFormViewModel } from '@/viewmodel/useDisciplinaFormViewModel';
 import { Disciplina } from '@/model/entities';
 
+import { useSearchParams } from 'react-router-dom';
+
 const DisciplinasListScreen = () => {
-    const { disciplinas, loading, refresh, deleteDisciplina } = useDisciplinasListViewModel();
+    const [searchParams] = useSearchParams();
+    const areaFilter = searchParams.get('area') || undefined;
+
+    const { disciplinas, loading, refresh, deleteDisciplina } = useDisciplinasListViewModel(areaFilter);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingDisciplina, setEditingDisciplina] = useState<Disciplina | null>(null);
 
@@ -36,9 +41,14 @@ const DisciplinasListScreen = () => {
             <div className="space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold edu-gradient-text">Disciplinas</h1>
+                        <h1 className="text-3xl font-bold edu-gradient-text">
+                            {areaFilter ? `Disciplinas: ${areaFilter}` : 'Disciplinas'}
+                        </h1>
                         <p className="text-muted-foreground mt-1">
-                            Gerencie suas disciplinas e organize seu conteúdo didático
+                            {areaFilter
+                                ? `Disciplinas da área de ${areaFilter}`
+                                : 'Gerencie suas disciplinas e organize seu conteúdo didático'
+                            }
                         </p>
                     </div>
 
@@ -54,12 +64,14 @@ const DisciplinasListScreen = () => {
                                 <DialogTitle>Nova Disciplina</DialogTitle>
                             </DialogHeader>
                             <DisciplinaForm
+                                defaultValues={{ area: areaFilter }}
                                 onSubmit={(data) => {
                                     // Ensure mandatory fields are present before calling logic
                                     if (data.nome && data.serie) {
                                         formViewModel.createDisciplina({
                                             nome: data.nome,
                                             serie: data.serie,
+                                            area: data.area,
                                             descricao: data.descricao
                                         })
                                     }
@@ -88,6 +100,11 @@ const DisciplinasListScreen = () => {
 
                 {loading ? (
                     <div className="text-center py-10">Carregando...</div>
+                ) : disciplinas.length === 0 ? (
+                    <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed border-muted-foreground/20">
+                        <p className="text-muted-foreground text-lg">Não há disciplinas cadastradas no momento.</p>
+                        <p className="text-sm text-muted-foreground/60 mt-1">Clique em "Nova Disciplina" para começar.</p>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {disciplinas.map((disciplina) => (

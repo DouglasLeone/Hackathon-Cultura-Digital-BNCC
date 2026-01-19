@@ -4,7 +4,7 @@ import { IDisciplinaRepository } from '../model/repositories/IDisciplinaReposito
 export class GetAllDisciplinasUseCase {
     constructor(private repository: IDisciplinaRepository) { }
 
-    async execute() {
-        return await this.repository.getAll();
+    async execute(area?: string) {
+        return await this.repository.getAll(area);
     }
 }

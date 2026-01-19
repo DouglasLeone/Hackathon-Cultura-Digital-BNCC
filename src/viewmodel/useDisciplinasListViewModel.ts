@@ -4,7 +4,7 @@ import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 
-export const useDisciplinasListViewModel = () => {
+export const useDisciplinasListViewModel = (areaFilter?: string) => {
     const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -12,19 +12,20 @@ export const useDisciplinasListViewModel = () => {
     const loadDisciplinas = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await DIContainer.getAllDisciplinasUseCase.execute();
+            const data = await DIContainer.getAllDisciplinasUseCase.execute(areaFilter);
             setDisciplinas(data);
         } catch (error) {
             console.error('Error fetching disciplinas:', error);
-            toast({
-                title: "Erro",
-                description: "Não foi possível carregar as disciplinas.",
-                variant: "destructive",
-            });
+            // Suppressing error toast as requested for empty states or minor issues
+            // toast({
+            //     title: "Erro",
+            //     description: "Não foi possível carregar as disciplinas.",
+            //     variant: "destructive",
+            // });
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, areaFilter]);
 
     const deleteDisciplina = async (id: string) => {
         try {

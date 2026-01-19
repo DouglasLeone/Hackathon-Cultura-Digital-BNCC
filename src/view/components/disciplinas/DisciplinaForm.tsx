@@ -19,12 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/view/components/ui/select';
-import { SERIES_OPTIONS, DISCIPLINAS_SUGERIDAS } from '@/model/entities';
+import { SERIES_OPTIONS, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '@/model/entities';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { DIContainer } from '@/di/container';
 
 const formSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   serie: z.string().min(1, 'Selecione uma série'),
+  area: z.string().min(1, 'Selecione uma área de conhecimento'),
   descricao: z.string().optional(),
 });
 
@@ -37,48 +40,83 @@ interface DisciplinaFormProps {
 }
 
 export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: DisciplinaFormProps) {
+  const [seriesOptions, setSeriesOptions] = useState<readonly string[]>([]);
+
+  useEffect(() => {
+    // Basic userId fetch from local storage for simpler context
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+      setSeriesOptions(SERIES_OPTIONS);
+      return;
+    }
+
+    DIContainer.getUserContextUseCase.execute(userId).then(ctx => {
+      if (ctx && ctx.niveis_ensino) {
+        let options: string[] = [];
+        if (ctx.niveis_ensino.includes('Ensino Fundamental')) {
+          options = [...options, ...SERIES_FUNDAMENTAL];
+        }
+        if (ctx.niveis_ensino.includes('Ensino Médio')) {
+          options = [...options, ...SERIES_MEDIO];
+        }
+        setSeriesOptions(options.length > 0 ? options : SERIES_OPTIONS);
+      } else {
+        setSeriesOptions(SERIES_OPTIONS);
+      }
+    }).catch(err => {
+      console.error("Failed to load user context for series filtering", err);
+      setSeriesOptions(SERIES_OPTIONS);
+    });
+  }, []);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nome: '',
       serie: '',
+      area: '',
       descricao: '',
       ...defaultValues,
     },
   });
 
+  const showAreaField = !defaultValues?.area;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {showAreaField && (
+          <FormField
+            control={form.control}
+            name="area"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Área do Conhecimento</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: Linguagens, Matemática..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        {!showAreaField && (
+          <input type="hidden" {...form.register('area')} />
+        )}
+
         <FormField
           control={form.control}
           name="nome"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nome da Disciplina</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione ou digite o nome" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {DISCIPLINAS_SUGERIDAS.map((disc) => (
-                    <SelectItem key={disc} value={disc}>
-                      {disc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <FormControl>
-                <Input 
-                  placeholder="Ou digite um nome personalizado"
-                  className="mt-2"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      field.onChange(e.target.value);
-                    }
-                  }}
+                <Input
+                  placeholder="Ex: História, Geografia..."
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -99,7 +137,7 @@ export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: Disciplin
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {SERIES_OPTIONS.map((serie) => (
+                  {seriesOptions.map((serie) => (
                     <SelectItem key={serie} value={serie}>
                       {serie}
                     </SelectItem>
