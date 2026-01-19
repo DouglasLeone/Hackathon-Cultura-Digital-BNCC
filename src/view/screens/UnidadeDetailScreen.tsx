@@ -15,6 +15,15 @@ import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
 import { Dialog, DialogContent, DialogTrigger } from '@/view/components/ui/dialog';
 
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/view/components/ui/breadcrumb";
+
 const UnidadeDetailScreen = () => {
     const { unidadeId } = useParams<{ unidadeId: string }>();
     const {
@@ -37,15 +46,30 @@ const UnidadeDetailScreen = () => {
     return (
         <AppLayout>
             <div className="space-y-6">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/ensino">Ensino</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href={`/disciplinas/${unidade.disciplina_id}`}>
+                                {unidade.disciplina?.nome || 'Disciplina'}
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{unidade.tema}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link
-                            to={`/disciplinas/${unidade.disciplina_id}`}
-                            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-4 transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Voltar para Disciplina
-                        </Link>
                         <h1 className="text-3xl font-bold edu-gradient-text">{unidade.tema}</h1>
                         <p className="text-muted-foreground mt-2">{unidade.contexto_cultura_digital}</p>
                     </div>

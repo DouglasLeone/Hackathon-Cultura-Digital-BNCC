@@ -8,6 +8,15 @@ import { Button } from '@/view/components/ui/button';
 import { Unidade } from '@/model/entities';
 import { useState } from 'react';
 
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/view/components/ui/breadcrumb";
+
 const DisciplinaDetailScreen = () => {
     const { id } = useParams<{ id: string }>();
     const { disciplina, loading } = useDisciplinaDetailViewModel(id || '');
@@ -23,6 +32,28 @@ const DisciplinaDetailScreen = () => {
     return (
         <AppLayout>
             <div className="space-y-6">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/ensino">Ensino</BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href={`/disciplinas?area=${encodeURIComponent(disciplina.area)}`}>
+                                {disciplina.area}
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{disciplina.nome}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+
                 <div>
                     <h1 className="text-3xl font-bold edu-gradient-text">{disciplina.nome}</h1>
                     <div className="flex gap-2 mt-2">

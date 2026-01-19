@@ -2,7 +2,8 @@ export interface Disciplina {
   id: string;
   nome: string;
   serie: string;
-  area: string; // New field
+  nivel: string; // Added field
+  area: string;
   descricao?: string;
   created_at: string;
   updated_at: string;
