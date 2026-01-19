@@ -16,11 +16,12 @@ export const useDisciplinasListViewModel = (areaFilter?: string) => {
             setDisciplinas(data);
         } catch (error) {
             console.error('Error fetching disciplinas:', error);
-            toast({
-                title: "Erro",
-                description: "Não foi possível carregar as disciplinas.",
-                variant: "destructive",
-            });
+            // Suppressing error toast as requested for empty states or minor issues
+            // toast({
+            //     title: "Erro",
+            //     description: "Não foi possível carregar as disciplinas.",
+            //     variant: "destructive",
+            // });
         } finally {
             setLoading(false);
         }
