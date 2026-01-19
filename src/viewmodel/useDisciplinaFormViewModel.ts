@@ -4,12 +4,16 @@ import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 
-export const useDisciplinaFormViewModel = (onSuccess?: () => void) => {
+interface UseDisciplinaFormViewModelProps {
+    onSuccess?: () => void;
+}
+
+export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewModelProps = {}) => {
     const [loading, setLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const { toast } = useToast();
 
-    const createDisciplina = async (disciplina: Omit<Disciplina, 'id' | 'created_at' | 'updated_at'>) => {
+    const createDisciplina = async (disciplina: Omit<Disciplina, 'id' | 'created_at' | 'updated_at' | 'nivel'>) => {
         setLoading(true);
         try {
             await DIContainer.createDisciplinaUseCase.execute(disciplina);

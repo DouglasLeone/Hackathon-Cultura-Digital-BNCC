@@ -20,16 +20,31 @@ export class FirestoreDisciplinaRepository implements IDisciplinaRepository {
     async getAll(area?: string): Promise<Disciplina[]> {
         let q;
         if (area) {
-            q = query(collection(db, this.collectionName), where('area', '==', area), orderBy('nome'));
+            // Ensure exact match by trimming, just in case
+            const safeArea = area.trim();
+            // Don't use orderBy with where clause to avoid composite index requirement
+            q = query(collection(db, this.collectionName), where('area', '==', safeArea));
         } else {
             q = query(collection(db, this.collectionName), orderBy('nome'));
         }
 
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data() as object
-        } as Disciplina));
+        try {
+            const querySnapshot = await getDocs(q);
+            const disciplinas = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data() as object
+            } as Disciplina));
+
+            // Sort in-memory when filtering by area
+            if (area) {
+                disciplinas.sort((a, b) => a.nome.localeCompare(b.nome));
+            }
+
+            return disciplinas;
+        } catch (error) {
+            console.error("Firestore getAll error:", error);
+            throw error;
+        }
     }
 
     async getById(id: string): Promise<Disciplina | null> {
@@ -49,6 +64,7 @@ export class FirestoreDisciplinaRepository implements IDisciplinaRepository {
         const now = new Date().toISOString();
         const data = {
             ...disciplina,
+            area: disciplina.area.trim(),
             created_at: now,
             updated_at: now
         };
