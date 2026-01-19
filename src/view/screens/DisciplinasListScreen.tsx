@@ -16,8 +16,13 @@ import { DisciplinaForm } from '@/view/components/disciplinas/DisciplinaForm';
 import { useDisciplinaFormViewModel } from '@/viewmodel/useDisciplinaFormViewModel';
 import { Disciplina } from '@/model/entities';
 
+import { useSearchParams } from 'react-router-dom';
+
 const DisciplinasListScreen = () => {
-    const { disciplinas, loading, refresh, deleteDisciplina } = useDisciplinasListViewModel();
+    const [searchParams] = useSearchParams();
+    const areaFilter = searchParams.get('area') || undefined;
+
+    const { disciplinas, loading, refresh, deleteDisciplina } = useDisciplinasListViewModel(areaFilter);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingDisciplina, setEditingDisciplina] = useState<Disciplina | null>(null);
 
@@ -36,9 +41,14 @@ const DisciplinasListScreen = () => {
             <div className="space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold edu-gradient-text">Disciplinas</h1>
+                        <h1 className="text-3xl font-bold edu-gradient-text">
+                            {areaFilter ? `Disciplinas: ${areaFilter}` : 'Disciplinas'}
+                        </h1>
                         <p className="text-muted-foreground mt-1">
-                            Gerencie suas disciplinas e organize seu conteúdo didático
+                            {areaFilter
+                                ? `Disciplinas da área de ${areaFilter}`
+                                : 'Gerencie suas disciplinas e organize seu conteúdo didático'
+                            }
                         </p>
                     </div>
 
@@ -60,6 +70,7 @@ const DisciplinasListScreen = () => {
                                         formViewModel.createDisciplina({
                                             nome: data.nome,
                                             serie: data.serie,
+                                            area: data.area,
                                             descricao: data.descricao
                                         })
                                     }
