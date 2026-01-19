@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
-  { icon: BookOpen, label: 'Disciplinas', path: '/disciplinas' },
-  { icon: GraduationCap, label: 'Unidades', path: '/unidades' },
+  { icon: BookOpen, label: 'Ensino', path: '/ensino' },
+  { icon: GraduationCap, label: 'Disciplinas', path: '/disciplinas' },
   { icon: Sparkles, label: 'Gerar Material', path: '/gerar' },
   { icon: History, label: 'Histórico', path: '/historico' },
   { icon: Settings, label: 'Configurações', path: '/configuracoes' },

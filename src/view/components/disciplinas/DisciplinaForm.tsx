@@ -19,12 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/view/components/ui/select';
-import { SERIES_OPTIONS, DISCIPLINAS_SUGERIDAS } from '@/model/entities';
+import { SERIES_OPTIONS, DISCIPLINAS_SUGERIDAS, AREAS_CONHECIMENTO_FUNDAMENTAL, AREAS_CONHECIMENTO_MEDIO } from '@/model/entities';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   serie: z.string().min(1, 'Selecione uma série'),
+  area: z.string().min(1, 'Selecione uma área de conhecimento'),
   descricao: z.string().optional(),
 });
 
@@ -52,6 +53,30 @@ export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: Disciplin
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
+          name="area"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Área do Conhecimento</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="disabled-fund" disabled className="font-semibold text-muted-foreground opacity-100">Ensino Fundamental</SelectItem>
+                  {AREAS_CONHECIMENTO_FUNDAMENTAL.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                  <SelectItem value="disabled-medio" disabled className="font-semibold text-muted-foreground opacity-100 mt-2">Ensino Médio</SelectItem>
+                  {AREAS_CONHECIMENTO_MEDIO.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="nome"
           render={({ field }) => (
             <FormItem>
@@ -71,7 +96,7 @@ export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: Disciplin
                 </SelectContent>
               </Select>
               <FormControl>
-                <Input 
+                <Input
                   placeholder="Ou digite um nome personalizado"
                   className="mt-2"
                   onChange={(e) => {

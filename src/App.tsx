@@ -12,6 +12,7 @@ import UnidadesScreen from "./view/screens/UnidadesScreen";
 import GerarMaterialScreen from "./view/screens/GerarMaterialScreen";
 import HistoricoScreen from "./view/screens/HistoricoScreen";
 import SettingsScreen from "./view/screens/SettingsScreen";
+import EnsinoScreen from "./view/screens/EnsinoScreen";
 import { OnboardingModal } from "./view/components/onboarding/OnboardingModal";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
         <OnboardingModal />
         <Routes>
           <Route path="/" element={<HomeScreen />} />
+          <Route path="/ensino" element={<EnsinoScreen />} />
           <Route path="/disciplinas" element={<DisciplinasListScreen />} />
           <Route path="/disciplinas/:id" element={<DisciplinaDetailScreen />} />
           <Route path="/disciplinas/:disciplinaId/unidades/:unidadeId" element={<UnidadeDetailScreen />} />
