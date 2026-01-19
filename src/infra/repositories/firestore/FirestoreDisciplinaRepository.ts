@@ -7,7 +7,8 @@ import {
     deleteDoc,
     doc,
     query,
-    orderBy
+    orderBy,
+    where
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Disciplina } from '../../../model/entities';
@@ -16,12 +17,18 @@ import { IDisciplinaRepository } from '../../../model/repositories/IDisciplinaRe
 export class FirestoreDisciplinaRepository implements IDisciplinaRepository {
     private collectionName = 'disciplinas';
 
-    async getAll(): Promise<Disciplina[]> {
-        const q = query(collection(db, this.collectionName), orderBy('nome'));
+    async getAll(area?: string): Promise<Disciplina[]> {
+        let q;
+        if (area) {
+            q = query(collection(db, this.collectionName), where('area', '==', area), orderBy('nome'));
+        } else {
+            q = query(collection(db, this.collectionName), orderBy('nome'));
+        }
+
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
             id: doc.id,
-            ...doc.data()
+            ...doc.data() as object
         } as Disciplina));
     }
 

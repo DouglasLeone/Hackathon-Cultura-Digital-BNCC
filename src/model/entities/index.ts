@@ -2,10 +2,49 @@ export interface Disciplina {
   id: string;
   nome: string;
   serie: string;
+  area: string; // New field
   descricao?: string;
   created_at: string;
   updated_at: string;
 }
+
+export const AREAS_CONHECIMENTO_MEDIO = [
+  'Linguagens e suas Tecnologias',
+  'Matemática e suas Tecnologias',
+  'Ciências da Natureza e suas Tecnologias',
+  'Ciências Humanas e Sociais Aplicadas'
+] as const;
+
+export const AREAS_CONHECIMENTO_FUNDAMENTAL = [
+  'Linguagens',
+  'Matemática',
+  'Ciências da Natureza',
+  'Ciências Humanas',
+  'Ensino Religioso'
+] as const;
+
+export const SERIES_FUNDAMENTAL = [
+  '1º Ano - Ensino Fundamental',
+  '2º Ano - Ensino Fundamental',
+  '3º Ano - Ensino Fundamental',
+  '4º Ano - Ensino Fundamental',
+  '5º Ano - Ensino Fundamental',
+  '6º Ano - Ensino Fundamental',
+  '7º Ano - Ensino Fundamental',
+  '8º Ano - Ensino Fundamental',
+  '9º Ano - Ensino Fundamental',
+] as const;
+
+export const SERIES_MEDIO = [
+  '1º Ano - Ensino Médio',
+  '2º Ano - Ensino Médio',
+  '3º Ano - Ensino Médio',
+] as const;
+
+export const SERIES_OPTIONS = [
+  ...SERIES_FUNDAMENTAL,
+  ...SERIES_MEDIO
+] as const;
 
 export interface Unidade {
   id: string;
@@ -81,20 +120,7 @@ export interface UserContext {
   updated_at: string;
 }
 
-export const SERIES_OPTIONS = [
-  '1º Ano - Ensino Fundamental',
-  '2º Ano - Ensino Fundamental',
-  '3º Ano - Ensino Fundamental',
-  '4º Ano - Ensino Fundamental',
-  '5º Ano - Ensino Fundamental',
-  '6º Ano - Ensino Fundamental',
-  '7º Ano - Ensino Fundamental',
-  '8º Ano - Ensino Fundamental',
-  '9º Ano - Ensino Fundamental',
-  '1º Ano - Ensino Médio',
-  '2º Ano - Ensino Médio',
-  '3º Ano - Ensino Médio',
-] as const;
+
 
 export const DISCIPLINAS_SUGERIDAS = [
   'Matemática',

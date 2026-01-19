@@ -6,6 +6,7 @@ export const mockDisciplinas: Disciplina[] = [
         id: '1',
         nome: 'História',
         serie: '8º Ano',
+        area: 'Ciências Humanas', // Fundamental
         descricao: 'Ensino de História Geral e do Brasil',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -14,6 +15,7 @@ export const mockDisciplinas: Disciplina[] = [
         id: '2',
         nome: 'Matemática',
         serie: '9º Ano',
+        area: 'Matemática', // Fundamental
         descricao: 'Álgebra e Geometria',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
