@@ -23,7 +23,7 @@ export const AREAS_CONHECIMENTO_FUNDAMENTAL = [
   'Ensino Religioso'
 ] as const;
 
-export const SERIES_OPTIONS = [
+export const SERIES_FUNDAMENTAL = [
   '1º Ano - Ensino Fundamental',
   '2º Ano - Ensino Fundamental',
   '3º Ano - Ensino Fundamental',
@@ -33,9 +33,17 @@ export const SERIES_OPTIONS = [
   '7º Ano - Ensino Fundamental',
   '8º Ano - Ensino Fundamental',
   '9º Ano - Ensino Fundamental',
+] as const;
+
+export const SERIES_MEDIO = [
   '1º Ano - Ensino Médio',
   '2º Ano - Ensino Médio',
   '3º Ano - Ensino Médio',
+] as const;
+
+export const SERIES_OPTIONS = [
+  ...SERIES_FUNDAMENTAL,
+  ...SERIES_MEDIO
 ] as const;
 
 export interface Unidade {
