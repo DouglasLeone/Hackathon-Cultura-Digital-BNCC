@@ -1,21 +1,27 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BookOpen, GraduationCap, Home, History, Lightbulb, Sparkles, Settings } from 'lucide-react';
+import { BookOpen, GraduationCap, Home, History, Lightbulb, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
   { icon: BookOpen, label: 'Ensino', path: '/ensino' },
   { icon: GraduationCap, label: 'Disciplinas', path: '/disciplinas' },
-  { icon: Sparkles, label: 'Gerar Material', path: '/gerar' },
+
   { icon: History, label: 'Histórico', path: '/historico' },
   { icon: Settings, label: 'Configurações', path: '/configuracoes' },
 ];
 
-export function Sidebar() {
+
+interface SidebarProps {
+  className?: string;
+  onClose?: () => void;
+}
+
+export function Sidebar({ className, onClose }: SidebarProps) {
   const location = useLocation();
 
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
+    <aside className={cn("w-64 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen transition-all duration-300", className)}>
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -37,6 +43,7 @@ export function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
                 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
@@ -60,3 +67,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

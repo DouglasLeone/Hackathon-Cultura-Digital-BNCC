@@ -1,12 +1,13 @@
 
 import { useParams } from 'react-router-dom';
 import { useDisciplinaDetailViewModel } from '../../viewmodel/useDisciplinaDetailViewModel';
+import { useUnidadesListViewModel } from '@/viewmodel/useUnidadesListViewModel';
 import { AppLayout } from '@/view/components/layout/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/view/components/ui/card';
 import { Badge } from '@/view/components/ui/badge';
 import { Button } from '@/view/components/ui/button';
 import { Unidade } from '@/model/entities';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import {
     Breadcrumb,
@@ -16,23 +17,61 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/view/components/ui/breadcrumb";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/view/components/ui/dialog';
+import { Plus, GraduationCap } from 'lucide-react';
+import { UnidadeForm } from '@/view/components/unidades/UnidadeForm';
+import { UnidadeCard } from '@/view/components/unidades/UnidadeCard';
+import { UnidadeCardSkeleton } from '@/view/components/unidades/UnidadeCardSkeleton';
+import { EmptyState } from '@/view/components/ui/empty-state';
 
 const DisciplinaDetailScreen = () => {
     const { id } = useParams<{ id: string }>();
-    const { disciplina, loading } = useDisciplinaDetailViewModel(id || '');
+    const { disciplina, loading: loadingDisciplina } = useDisciplinaDetailViewModel(id || '');
 
-    if (loading) {
-        return <AppLayout><div>Loading...</div></AppLayout>;
+    // Lifted ViewModel for Unidades
+    const {
+        unidades,
+        loading: loadingUnidades,
+        createUnidade,
+        deleteUnidade,
+        updateUnidade
+    } = useUnidadesListViewModel(id || '');
+
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [editingUnidade, setEditingUnidade] = useState<Unidade | null>(null);
+
+    // Initial loading state for the whole page if main entity is missing
+    if (loadingDisciplina) {
+        return (
+            <AppLayout>
+                <div className="space-y-6 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+                    <div className="space-y-2">
+                        <div className="h-10 w-64 bg-muted animate-pulse rounded" />
+                        <div className="h-6 w-24 bg-muted animate-pulse rounded" />
+                    </div>
+                </div>
+            </AppLayout>
+        );
     }
 
     if (!disciplina) {
-        return <AppLayout><div>Disciplina não encontrada.</div></AppLayout>;
+        return (
+            <AppLayout>
+                <EmptyState
+                    icon={GraduationCap}
+                    title="Disciplina não encontrada"
+                    description="Não foi possível encontrar a disciplina solicitada."
+                    action={<Button variant="outline" onClick={() => window.history.back()}>Voltar</Button>}
+                />
+            </AppLayout>
+        );
     }
 
     return (
         <AppLayout>
-            <div className="space-y-6">
-                <Breadcrumb>
+            <div className="space-y-8 container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+                <Breadcrumb className="mb-4">
                     <BreadcrumbList>
                         <BreadcrumbItem>
                             <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
@@ -49,118 +88,132 @@ const DisciplinaDetailScreen = () => {
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{disciplina.nome}</BreadcrumbPage>
+                            <BreadcrumbPage className="font-semibold text-primary">{disciplina.nome}</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
 
-                <div>
-                    <h1 className="text-3xl font-bold edu-gradient-text">{disciplina.nome}</h1>
-                    <div className="flex gap-2 mt-2">
-                        <Badge variant="outline">{disciplina.serie}</Badge>
+                <div className="pb-6 border-b space-y-4">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                            {disciplina.nome}
+                        </h1>
+                        <div className="flex items-center gap-3">
+                            <Badge variant="secondary" className="text-sm px-3 py-1 font-medium">
+                                {disciplina.serie}
+                            </Badge>
+                            <Badge variant="outline" className="text-sm px-3 py-1 text-muted-foreground">
+                                {disciplina.nivel}
+                            </Badge>
+                        </div>
                     </div>
+                    {disciplina.descricao && (
+                        <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
+                            {disciplina.descricao}
+                        </p>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* We will replace this placeholder with proper Unidades List */}
-                    {/* This requires fetching units for the discipline */}
-                </div>
-                <div className="mt-8">
-                    <h2 className="text-2xl font-bold mb-4">Unidades de Ensino</h2>
-                    <UnidadesSection disciplinaId={disciplina.id} />
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground/90">Unidades de Ensino</h2>
+                            <p className="text-sm text-muted-foreground mt-1">Gerencie as unidades e tópicos desta disciplina</p>
+                        </div>
+
+                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                            <DialogTrigger asChild>
+                                <Button size="default" className="shadow-md hover:shadow-lg transition-all">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Nova Unidade
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                    <DialogTitle>Nova Unidade de Ensino</DialogTitle>
+                                </DialogHeader>
+                                <UnidadeForm
+                                    onSubmit={async (data) => {
+                                        if (data.tema) {
+                                            await createUnidade({
+                                                tema: data.tema,
+                                                contexto_cultura_digital: data.contexto_cultura_digital,
+                                                disciplina_id: disciplina.id
+                                            });
+                                            setIsCreateOpen(false);
+                                        }
+                                    }}
+                                />
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+
+                    <Dialog open={!!editingUnidade} onOpenChange={(open) => !open && setEditingUnidade(null)}>
+                        <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                                <DialogTitle>Editar Unidade</DialogTitle>
+                            </DialogHeader>
+                            {editingUnidade && (
+                                <UnidadeForm
+                                    defaultValues={editingUnidade}
+                                    onSubmit={async (data) => {
+                                        await updateUnidade(editingUnidade.id, data);
+                                        setEditingUnidade(null);
+                                    }}
+                                />
+                            )}
+                        </DialogContent>
+                    </Dialog>
+
+                    {loadingUnidades ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <UnidadeCardSkeleton key={i} />
+                            ))}
+                        </div>
+                    ) : unidades.length === 0 ? (
+                        <EmptyState
+                            icon={GraduationCap}
+                            title="Nenhuma unidade cadastrada"
+                            description="Comece adicionando a primeira unidade de ensino para esta disciplina."
+                            action={
+                                <Button variant="outline" onClick={() => setIsCreateOpen(true)}>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Criar Primeira Unidade
+                                </Button>
+                            }
+                        />
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        >
+                            <AnimatePresence mode='popLayout'>
+                                {unidades.map((unidade, index) => (
+                                    <motion.div
+                                        key={unidade.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                                    >
+                                        <UnidadeCard
+                                            unidade={unidade}
+                                            onDelete={deleteUnidade}
+                                            onEdit={setEditingUnidade}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </AppLayout>
     );
 };
 
-// Sub-component for Unidades Section to keep main screen clean
-import { useUnidadesListViewModel } from '@/viewmodel/useUnidadesListViewModel';
-import { UnidadeCard } from '@/view/components/unidades/UnidadeCard';
-import { UnidadeForm } from '@/view/components/unidades/UnidadeForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/view/components/ui/dialog';
-import { Plus } from 'lucide-react';
-
-const UnidadesSection = ({ disciplinaId }: { disciplinaId: string }) => {
-    // Note: I'm using a proxy here because I need to adapt the hook to return 'units' or rename it in the hook.
-    // Let's assume I use the hook directly but I need to handle the state.
-    // Actually, let's just use the hook I created.
-    return (
-        <UnidadesListWithLogic disciplinaId={disciplinaId} />
-    );
-}
-
-const UnidadesListWithLogic = ({ disciplinaId }: { disciplinaId: string }) => {
-    const { unidades, loading, createUnidade, deleteUnidade, updateUnidade } = useUnidadesListViewModel(disciplinaId);
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [editingUnidade, setEditingUnidade] = useState<Unidade | null>(null);
-
-    return (
-        <div className="space-y-4">
-            <div className="flex justify-end">
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Nova Unidade
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Nova Unidade</DialogTitle>
-                        </DialogHeader>
-                        <UnidadeForm onSubmit={async (data) => {
-                            if (data.tema) {
-                                await createUnidade({
-                                    tema: data.tema,
-                                    contexto_cultura_digital: data.contexto_cultura_digital,
-                                    disciplina_id: disciplinaId
-                                });
-                                setIsCreateOpen(false);
-                            }
-                        }} />
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            <Dialog open={!!editingUnidade} onOpenChange={(open) => !open && setEditingUnidade(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Editar Unidade</DialogTitle>
-                    </DialogHeader>
-                    {editingUnidade && (
-                        <UnidadeForm
-                            defaultValues={editingUnidade}
-                            onSubmit={async (data) => {
-                                await updateUnidade(editingUnidade.id, data);
-                                setEditingUnidade(null);
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {loading ? (
-                <div>Carregando unidades...</div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {unidades.map(unidade => (
-                        <UnidadeCard
-                            key={unidade.id}
-                            unidade={unidade}
-                            onDelete={deleteUnidade}
-                            onEdit={setEditingUnidade}
-                        />
-                    ))}
-                    {unidades.length === 0 && (
-                        <div className="col-span-full text-center text-muted-foreground py-8">
-                            Nenhuma unidade cadastrada.
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    )
-}
-
 export default DisciplinaDetailScreen;
+
