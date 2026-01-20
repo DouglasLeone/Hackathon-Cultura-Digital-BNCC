@@ -2,7 +2,7 @@
 import { FirestoreGenIARepository } from '../infra/repositories/firestore/FirestoreGenIARepository';
 import { FirestoreDisciplinaRepository } from '../infra/repositories/firestore/FirestoreDisciplinaRepository';
 import { FirestoreUnidadeRepository } from '../infra/repositories/firestore/FirestoreUnidadeRepository';
-import { MockAIService } from '../infra/services/MockAIService';
+import { GeminiAIService } from '../infra/services/GeminiAIService';
 import { GetHomeDataUseCase } from '../usecase/GetHomeDataUseCase';
 import { GetAllDisciplinasUseCase } from '../usecase/GetAllDisciplinasUseCase';
 import { GetDisciplinaByIdUseCase } from '../usecase/GetDisciplinaByIdUseCase';
@@ -33,7 +33,7 @@ class DIContainer {
     private static _disciplinaRepository = new FirestoreDisciplinaRepository();
     private static _unidadeRepository = new FirestoreUnidadeRepository();
     private static _userRepository = new FirestoreUserRepository();
-    private static _aiService = new MockAIService();
+    private static _aiService = new GeminiAIService();
 
     private static _getHomeDataUseCase = new GetHomeDataUseCase(
         this._genIARepository,
