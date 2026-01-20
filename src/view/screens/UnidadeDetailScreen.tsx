@@ -13,7 +13,7 @@ import { PPTXService } from '@/infra/services/PPTXService';
 import { PDFService } from '@/infra/services/PDFService';
 import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
-import { Dialog, DialogContent, DialogTrigger } from '@/view/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/view/components/ui/dialog';
 
 import {
     Breadcrumb,
@@ -23,6 +23,28 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/view/components/ui/breadcrumb";
+import { Questao } from '@/model/entities';
+
+const formatActivityContent = (questions: Questao[]): string => {
+    if (!questions || !Array.isArray(questions)) return '';
+
+    return questions.map((q, index) => {
+        let text = `### Questão ${index + 1}\n\n`;
+        text += `**${q.enunciado}**\n\n`;
+
+        if (q.tipo === 'multipla_escolha' && q.alternativas) {
+            q.alternativas.forEach((alt) => {
+                text += `- ${alt}\n`;
+            });
+        }
+
+        text += `\n_(Pontuação: ${q.pontuacao})_\n`;
+        if (q.resposta_correta) {
+            text += `\n> **Resposta:** ${q.resposta_correta}\n`;
+        }
+        return text;
+    }).join('\n---\n\n');
+};
 
 const UnidadeDetailScreen = () => {
     const { unidadeId } = useParams<{ unidadeId: string }>();
@@ -94,7 +116,7 @@ const UnidadeDetailScreen = () => {
                                         </DialogTrigger>
                                         <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h2 className="text-xl font-bold">{unidade.plano_aula.titulo}</h2>
+                                                <DialogTitle className="text-xl font-bold">{unidade.plano_aula.titulo}</DialogTitle>
                                             </div>
                                             <ContentEditor
                                                 title={unidade.plano_aula.titulo}
@@ -146,11 +168,11 @@ const UnidadeDetailScreen = () => {
                                         </DialogTrigger>
                                         <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h2 className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</h2>
+                                                <DialogTitle className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</DialogTitle>
                                             </div>
                                             <ContentEditor
                                                 title={unidade.atividade_avaliativa.titulo}
-                                                initialContent={JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2)}
+                                                initialContent={formatActivityContent(unidade.atividade_avaliativa.questoes)}
                                                 onSave={async (content) => {
                                                     if (!unidade.atividade_avaliativa) return;
                                                     try {
@@ -162,7 +184,7 @@ const UnidadeDetailScreen = () => {
                                                         throw e;
                                                     }
                                                 }}
-                                                onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, JSON.stringify(unidade.atividade_avaliativa.questoes, null, 2))}
+                                                onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, formatActivityContent(unidade.atividade_avaliativa.questoes))}
                                                 exportLabel="Baixar PDF"
                                                 variant="minimal"
                                                 hideTitle
@@ -213,6 +235,7 @@ const UnidadeDetailScreen = () => {
                                     <Button variant="outline" className="w-full mt-2">Visualizar Slides</Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-4xl w-full">
+                                    <DialogTitle>Slides: {unidade.tema}</DialogTitle>
                                     <ViewComponentsSlidesViewer title={`Slides: ${unidade.tema}`} />
                                 </DialogContent>
                             </Dialog>
