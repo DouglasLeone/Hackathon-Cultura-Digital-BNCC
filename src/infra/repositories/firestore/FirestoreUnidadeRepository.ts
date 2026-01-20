@@ -47,10 +47,22 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return {
+            const unidadeData = {
                 id: docSnap.id,
                 ...docSnap.data()
             } as Unidade;
+
+            // Fetch related materials
+            const [plano, atividade] = await Promise.all([
+                this.getPlanoAula(unidadeData.id),
+                this.getAtividade(unidadeData.id)
+            ]);
+
+            return {
+                ...unidadeData,
+                plano_aula: plano || undefined,
+                atividade_avaliativa: atividade || undefined
+            };
         }
         return null;
     }
