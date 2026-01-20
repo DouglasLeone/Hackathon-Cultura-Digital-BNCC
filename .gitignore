@@ -25,3 +25,4 @@ Arquivos/
 *.sw?
 
 *.env
+*test_models.js
