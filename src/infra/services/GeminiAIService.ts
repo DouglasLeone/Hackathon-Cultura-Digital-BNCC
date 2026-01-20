@@ -20,8 +20,7 @@ export class GeminiAIService implements IAIService {
             console.error("VITE_GOOGLE_API_KEY is not set");
         }
         this.genAI = new GoogleGenerativeAI(apiKey || "");
-        // Usando alias 'latest' para garantir compatibilidade com a versão atual disponível
-        this.model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
     }
 
     async suggestUnidades(disciplina: Disciplina, context?: UserContext): Promise<string[]> {
@@ -44,8 +43,7 @@ export class GeminiAIService implements IAIService {
             return JSON.parse(text);
         } catch (error) {
             console.error("Error generating units:", error);
-            throw error;
-            // return ["Erro ao gerar sugestões. Tente novamente."];
+            return ["Erro ao gerar sugestões. Tente novamente."];
         }
     }
 
@@ -78,8 +76,7 @@ export class GeminiAIService implements IAIService {
             return JSON.parse(response.text());
         } catch (error) {
             console.error("Error generating lesson plan:", error);
-            throw error;
-            // return { titulo: "Erro ao gerar plano de aula" };
+            return { titulo: "Erro ao gerar plano de aula" };
         }
     }
 
@@ -124,8 +121,7 @@ export class GeminiAIService implements IAIService {
             return JSON.parse(response.text());
         } catch (error) {
             console.error("Error generating activity:", error);
-            throw error;
-            // return { titulo: "Erro ao gerar atividade" };
+            return { titulo: "Erro ao gerar atividade" };
         }
     }
 
