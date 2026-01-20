@@ -13,7 +13,7 @@ import { PPTXService } from '@/infra/services/PPTXService';
 import { PDFService } from '@/infra/services/PDFService';
 import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
-import { Dialog, DialogContent, DialogTrigger } from '@/view/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/view/components/ui/dialog';
 
 import {
     Breadcrumb,
@@ -94,7 +94,7 @@ const UnidadeDetailScreen = () => {
                                         </DialogTrigger>
                                         <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h2 className="text-xl font-bold">{unidade.plano_aula.titulo}</h2>
+                                                <DialogTitle className="text-xl font-bold">{unidade.plano_aula.titulo}</DialogTitle>
                                             </div>
                                             <ContentEditor
                                                 title={unidade.plano_aula.titulo}
@@ -146,7 +146,7 @@ const UnidadeDetailScreen = () => {
                                         </DialogTrigger>
                                         <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h2 className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</h2>
+                                                <DialogTitle className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</DialogTitle>
                                             </div>
                                             <ContentEditor
                                                 title={unidade.atividade_avaliativa.titulo}
@@ -213,6 +213,7 @@ const UnidadeDetailScreen = () => {
                                     <Button variant="outline" className="w-full mt-2">Visualizar Slides</Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-4xl w-full">
+                                    <DialogTitle>Slides: {unidade.tema}</DialogTitle>
                                     <ViewComponentsSlidesViewer title={`Slides: ${unidade.tema}`} />
                                 </DialogContent>
                             </Dialog>
