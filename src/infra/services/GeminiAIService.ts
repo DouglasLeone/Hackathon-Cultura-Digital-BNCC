@@ -20,7 +20,7 @@ export class GeminiAIService implements IAIService {
             console.error("VITE_GOOGLE_API_KEY is not set");
         }
         this.genAI = new GoogleGenerativeAI(apiKey || "");
-        this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+        this.model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     }
 
     async suggestUnidades(disciplina: Disciplina, context?: UserContext): Promise<string[]> {
@@ -121,7 +121,8 @@ export class GeminiAIService implements IAIService {
             return JSON.parse(response.text());
         } catch (error) {
             console.error("Error generating activity:", error);
-            return { titulo: "Erro ao gerar atividade" };
+            throw error;
+            // return { titulo: "Erro ao gerar atividade" };
         }
     }
 
