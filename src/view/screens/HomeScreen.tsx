@@ -1,7 +1,7 @@
 import { AppLayout } from '@/view/components/layout/AppLayout';
 import { StatsCard } from '@/view/components/dashboard/StatsCard';
 import { RecentActivity } from '@/view/components/dashboard/RecentActivity';
-import { QuickActions } from '@/view/components/dashboard/QuickActions';
+
 import { BookOpen, GraduationCap, FileText, ClipboardList } from 'lucide-react';
 import { useHomeViewModel } from '@/viewmodel/useHomeViewModel';
 
@@ -55,18 +55,17 @@ const Index = () => {
           />
         </div>
 
+
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="w-full">
             <RecentActivity historico={historico} />
-          </div>
-          <div>
-            <QuickActions />
           </div>
         </div>
       </div>
     </AppLayout>
   );
 };
+
 
 export default Index;
