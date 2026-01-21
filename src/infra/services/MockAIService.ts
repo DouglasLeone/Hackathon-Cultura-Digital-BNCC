@@ -20,7 +20,7 @@ export class MockAIService implements IAIService {
         return suggestions;
     }
 
-    async generatePlanoAula(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').PlanoAula>> {
+    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: import('../../model/entities').HabilidadeBNCC[], context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').PlanoAula>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         const nivelContext = context?.niveis_ensino?.length
@@ -38,7 +38,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async generateAtividade(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').AtividadeAvaliativa>> {
+    async generateAtividade(unidade: Unidade, habilidadesBNCC: import('../../model/entities').HabilidadeBNCC[], context?: import('../../model/entities').UserContext): Promise<Partial<import('../../model/entities').AtividadeAvaliativa>> {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         const nivelContext = context?.niveis_ensino?.length
@@ -69,7 +69,7 @@ export class MockAIService implements IAIService {
         };
     }
 
-    async generateSlides(unidade: Unidade, context?: import('../../model/entities').UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
+    async generateSlides(unidade: Unidade, habilidadesBNCC: import('../../model/entities').HabilidadeBNCC[], context?: import('../../model/entities').UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
         await new Promise(resolve => setTimeout(resolve, 2000));
         return {
             titulo: `Slides: ${unidade.tema}`,

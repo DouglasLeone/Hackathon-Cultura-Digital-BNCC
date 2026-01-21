@@ -1,3 +1,6 @@
+export * from './BNCC';
+import { HabilidadeBNCC } from './BNCC';
+
 export interface Disciplina {
   id: string;
   nome: string;
@@ -73,6 +76,8 @@ export interface PlanoAula {
   avaliacao: string;
   referencias?: string;
   conteudo?: string; // For the full markdown content
+  habilidades_bncc_usadas?: string[]; // Added missing field
+  habilidades_possiveis?: HabilidadeBNCC[];
   created_at: string;
   updated_at: string;
 }
@@ -95,6 +100,7 @@ export interface AtividadeAvaliativa {
   questoes: Questao[];
   criterios_avaliacao?: string;
   pontuacao_total: number;
+  habilidades_possiveis?: HabilidadeBNCC[];
   created_at: string;
   updated_at: string;
 }
