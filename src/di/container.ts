@@ -22,6 +22,7 @@ import { GenerateAtividadeUseCase } from '../usecase/GenerateAtividadeUseCase';
 import { GenerateSlidesUseCase } from '../usecase/GenerateSlidesUseCase';
 import { UpdatePlanoAulaUseCase } from '../usecase/UpdatePlanoAulaUseCase';
 import { UpdateAtividadeUseCase } from '../usecase/UpdateAtividadeUseCase';
+import { UpdateSlidesUseCase } from '../usecase/UpdateSlidesUseCase';
 import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUseCase';
 import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
 import { FirestoreUserRepository } from '../infra/repositories/firestore/FirestoreUserRepository';
@@ -59,9 +60,10 @@ class DIContainer {
     private static _deleteUnidadeUseCase = new DeleteUnidadeUseCase(this._unidadeRepository);
     private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
     private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
-    private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService, this._bnccRepository);
+    private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService, this._bnccRepository, this._unidadeRepository);
     private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository, this._genIARepository);
     private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository, this._genIARepository);
+    private static _updateSlidesUseCase = new UpdateSlidesUseCase(this._unidadeRepository, this._genIARepository);
 
     private static _getUserContextUseCase = new GetUserContextUseCase(this._userRepository);
     private static _createUserContextUseCase = new CreateUserContextUseCase(this._userRepository);
@@ -154,6 +156,10 @@ class DIContainer {
 
     static get updateAtividadeUseCase() {
         return this._updateAtividadeUseCase;
+    }
+
+    static get updateSlidesUseCase() {
+        return this._updateSlidesUseCase;
     }
 
     static get getUserContextUseCase() {
