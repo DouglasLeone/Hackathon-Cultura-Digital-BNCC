@@ -1,7 +1,7 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { IAIService } from "../../model/services/IAIService";
-import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC } from "../../model/entities";
+import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC, SlideContent } from "../../model/entities";
 
 const SYSTEM_PROMPT = `
 Você é um assistente pedagógico especialista na BNCC (Base Nacional Comum Curricular) do Brasil.
@@ -12,7 +12,7 @@ Mantenha um tom profissional, encorajador e educativo.
 
 export class GeminiAIService implements IAIService {
     private genAI: GoogleGenerativeAI;
-    private model: any;
+    private model: GenerativeModel;
 
     constructor() {
         const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
@@ -146,7 +146,7 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<import("../../model/services/IAIService").SlideContent[]> {
+    async generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<SlideContent[]> {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 

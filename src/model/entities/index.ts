@@ -65,11 +65,17 @@ export interface Unidade {
   material_slides?: MaterialSlides;
 }
 
+export interface SlideContent {
+  titulo: string;
+  conteudo: string[];
+  anotacoes?: string;
+}
+
 export interface MaterialSlides {
   id: string;
   unidade_id: string;
   titulo: string;
-  conteudo: any[]; // Using any[] for SlideContent structure to keep it flexible
+  conteudo: SlideContent[];
   arquivado?: boolean;
   created_at: string;
   updated_at: string;

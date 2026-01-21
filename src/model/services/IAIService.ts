@@ -1,10 +1,4 @@
-import { Disciplina, Unidade, UserContext, HabilidadeBNCC } from '../entities';
-
-export interface SlideContent {
-    titulo: string;
-    conteudo: string[];
-    anotacoes?: string;
-}
+import { Disciplina, Unidade, UserContext, HabilidadeBNCC, SlideContent } from '../entities';
 
 export interface IAIService {
     suggestUnidades(disciplina: Disciplina, context?: UserContext): Promise<string[]>;

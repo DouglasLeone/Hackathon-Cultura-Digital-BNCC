@@ -54,7 +54,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
                 const disciplinaRef = doc(db, 'disciplinas', unidade.disciplina_id);
                 const disciplinaSnap = await getDoc(disciplinaRef);
                 if (disciplinaSnap.exists()) {
-                    unidade.disciplina = { id: disciplinaSnap.id, ...disciplinaSnap.data() } as any;
+                    unidade.disciplina = { id: disciplinaSnap.id, ...disciplinaSnap.data() } as import('../../../model/entities').Disciplina;
                 }
             }
 
@@ -232,17 +232,22 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     async getMaterialSlides(unidadeId: string): Promise<MaterialSlides | null> {
         const q = query(
             collection(db, 'material_slides'),
-            where('unidade_id', '==', unidadeId),
-            orderBy('created_at', 'desc'),
-            limit(1)
+            where('unidade_id', '==', unidadeId)
+            // Removed orderBy to avoid composite index requirement during hackathon
+            // orderBy('created_at', 'desc'),
+            // limit(1) 
         );
         const snapshot = await getDocs(q);
         if (snapshot.empty) return null;
 
-        const data = snapshot.docs[0].data() as MaterialSlides;
-        if (data.arquivado) return null;
+        // In-memory sort to get the latest
+        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaterialSlides));
+        docs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-        return { id: snapshot.docs[0].id, ...data };
+        const latest = docs[0];
+        if (latest.arquivado) return null;
+
+        return latest;
     }
 
     async updateMaterialSlides(id: string, data: Partial<MaterialSlides>): Promise<void> {
