@@ -9,7 +9,7 @@ interface ContentEditorProps {
     title: string;
     initialContent: string;
     onSave: (content: string) => Promise<void>;
-    onExport: () => void;
+    onExport?: () => void;
     exportLabel?: string;
     variant?: 'default' | 'minimal';
     hideTitle?: boolean;
@@ -88,10 +88,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                 <Edit className="w-4 h-4 mr-2" />
                                 Editar
                             </Button>
-                            <Button variant="secondary" onClick={onExport}>
-                                <Download className="w-4 h-4 mr-2" />
-                                {exportLabel}
-                            </Button>
+                            {onExport && (
+                                <Button variant="secondary" onClick={onExport}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    {exportLabel}
+                                </Button>
+                            )}
                         </>
                     )}
                 </div>

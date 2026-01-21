@@ -78,6 +78,7 @@ export interface PlanoAula {
   conteudo?: string; // For the full markdown content
   habilidades_bncc_usadas?: string[]; // Added missing field
   habilidades_possiveis?: HabilidadeBNCC[];
+  arquivado?: boolean; // New field for Soft Delete
   created_at: string;
   updated_at: string;
 }
@@ -101,6 +102,7 @@ export interface AtividadeAvaliativa {
   criterios_avaliacao?: string;
   pontuacao_total: number;
   habilidades_possiveis?: HabilidadeBNCC[];
+  arquivado?: boolean; // New field for Soft Delete
   created_at: string;
   updated_at: string;
 }
@@ -114,6 +116,7 @@ export interface HistoricoGeracao {
   disciplina_id?: string;
   unidade_id?: string;
   created_at: string;
+  arquivado?: boolean; // Joined or derived
   disciplina?: { nome: string }; // Joined
   unidade?: { tema: string }; // Joined
 }
