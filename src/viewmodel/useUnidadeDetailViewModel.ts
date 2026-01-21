@@ -126,6 +126,45 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     }
 
+    // New Archive methods
+    const archivePlanoAula = async () => {
+        if (!unidade || !unidade.plano_aula) return;
+        try {
+            await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { arquivado: true });
+            setUnidade(prev => prev ? { ...prev, plano_aula: undefined } : null);
+            toast({
+                title: "Arquivado",
+                description: "Plano de aula arquivado com sucesso.",
+            });
+        } catch (error) {
+            console.error('Error archiving plano:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível arquivar o plano de aula.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const archiveAtividade = async () => {
+        if (!unidade || !unidade.atividade_avaliativa) return;
+        try {
+            await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { arquivado: true });
+            setUnidade(prev => prev ? { ...prev, atividade_avaliativa: undefined } : null);
+            toast({
+                title: "Arquivado",
+                description: "Atividade arquivada com sucesso.",
+            });
+        } catch (error) {
+            console.error('Error archiving atividade:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível arquivar a atividade.",
+                variant: "destructive",
+            });
+        }
+    };
+
     useEffect(() => {
         loadUnidade();
     }, [loadUnidade]);
@@ -137,6 +176,8 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         generatePlanoAula,
         generateAtividade,
         generateSlides,
-        refresh: loadUnidade
+        refresh: loadUnidade,
+        archivePlanoAula,
+        archiveAtividade
     };
 };

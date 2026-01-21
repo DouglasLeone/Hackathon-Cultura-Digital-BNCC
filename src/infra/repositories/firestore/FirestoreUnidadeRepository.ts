@@ -123,10 +123,12 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const doc = querySnapshot.docs[0];
+            const data = doc.data() as PlanoAula;
+            if (data.arquivado) return null;
             return {
                 id: doc.id,
-                ...doc.data()
-            } as PlanoAula;
+                ...data
+            };
         }
         return null;
     }
@@ -180,10 +182,12 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const doc = querySnapshot.docs[0];
+            const data = doc.data() as AtividadeAvaliativa;
+            if (data.arquivado) return null;
             return {
                 id: doc.id,
-                ...doc.data()
-            } as AtividadeAvaliativa;
+                ...data
+            };
         }
         return null;
     }

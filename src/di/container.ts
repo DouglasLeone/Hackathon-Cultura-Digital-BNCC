@@ -60,8 +60,8 @@ class DIContainer {
     private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
     private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
     private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService, this._bnccRepository);
-    private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository);
-    private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository);
+    private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository, this._genIARepository);
+    private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository, this._genIARepository);
 
     private static _getUserContextUseCase = new GetUserContextUseCase(this._userRepository);
     private static _createUserContextUseCase = new CreateUserContextUseCase(this._userRepository);
