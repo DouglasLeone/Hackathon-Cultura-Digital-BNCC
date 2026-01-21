@@ -68,12 +68,14 @@ export const useHistoricoViewModel = () => {
 
     // Archive Mutation
     const archiveMutation = useMutation({
-        mutationFn: async (item: { id: string, tipo: string, arquivado?: boolean }) => {
+        mutationFn: async (item: { id: string, tipo: string, arquivado?: boolean, referencia_id?: string }) => {
             const novoEstado = !item.arquivado;
+            const targetId = item.referencia_id || item.id; // Fallback to id if referencia_id missing (shouldn't happen for these types)
+
             if (item.tipo === 'plano_aula') {
-                return DIContainer.updatePlanoAulaUseCase.execute(item.id, { arquivado: novoEstado });
+                return DIContainer.updatePlanoAulaUseCase.execute(targetId, { arquivado: novoEstado });
             } else if (item.tipo === 'atividade') {
-                return DIContainer.updateAtividadeUseCase.execute(item.id, { arquivado: novoEstado });
+                return DIContainer.updateAtividadeUseCase.execute(targetId, { arquivado: novoEstado });
             }
             throw new Error("Tipo não suportado para arquivamento");
         },

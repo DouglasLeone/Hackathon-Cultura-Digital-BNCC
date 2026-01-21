@@ -6,13 +6,20 @@ import { AppLayout } from '@/view/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/view/components/ui/card';
 import { Badge } from '@/view/components/ui/badge';
 import { Button } from '@/view/components/ui/button';
-import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft } from 'lucide-react';
+
 import { Link } from 'react-router-dom';
 import { ContentEditor } from '@/view/components/ContentEditor';
 import { PDFService } from '@/infra/services/PDFService';
 import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/view/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/view/components/ui/dropdown-menu";
+import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft, MoreVertical, Archive } from 'lucide-react';
 
 import {
     Breadcrumb,
@@ -53,7 +60,10 @@ const UnidadeDetailScreen = () => {
         generating,
         generatePlanoAula,
         generateAtividade,
-        generateSlides
+
+        generateSlides,
+        archivePlanoAula,
+        archiveAtividade
     } = useUnidadeDetailViewModel(unidadeId || '');
 
     if (loading) {
@@ -101,7 +111,25 @@ const UnidadeDetailScreen = () => {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Plano de Aula</CardTitle>
-                            <FileText className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center gap-2">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                {unidade.plano_aula && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Abrir menu</span>
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={archivePlanoAula} className="text-destructive focus:text-destructive">
+                                                <Archive className="mr-2 h-4 w-4" />
+                                                Arquivar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
                             {unidade.plano_aula ? (
@@ -153,7 +181,25 @@ const UnidadeDetailScreen = () => {
                     <Card className="col-span-1 md:col-span-2 lg:col-span-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Atividade</CardTitle>
-                            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center gap-2">
+                                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                                {unidade.atividade_avaliativa && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Abrir menu</span>
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={archiveAtividade} className="text-destructive focus:text-destructive">
+                                                <Archive className="mr-2 h-4 w-4" />
+                                                Arquivar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
                             {unidade.atividade_avaliativa ? (
