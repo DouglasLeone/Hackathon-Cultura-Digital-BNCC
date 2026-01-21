@@ -3,6 +3,7 @@ import { FirestoreGenIARepository } from '../infra/repositories/firestore/Firest
 import { FirestoreDisciplinaRepository } from '../infra/repositories/firestore/FirestoreDisciplinaRepository';
 import { FirestoreUnidadeRepository } from '../infra/repositories/firestore/FirestoreUnidadeRepository';
 import { GeminiAIService } from '../infra/services/GeminiAIService';
+import { BNCCRepository } from '../infra/repositories/BNCCRepository'; // Added
 import { GetHomeDataUseCase } from '../usecase/GetHomeDataUseCase';
 import { GetAllDisciplinasUseCase } from '../usecase/GetAllDisciplinasUseCase';
 import { GetDisciplinaByIdUseCase } from '../usecase/GetDisciplinaByIdUseCase';
@@ -33,6 +34,7 @@ class DIContainer {
     private static _disciplinaRepository = new FirestoreDisciplinaRepository();
     private static _unidadeRepository = new FirestoreUnidadeRepository();
     private static _userRepository = new FirestoreUserRepository();
+    private static _bnccRepository = new BNCCRepository(); // Added
     private static _aiService = new GeminiAIService();
 
     private static _getHomeDataUseCase = new GetHomeDataUseCase(
@@ -55,9 +57,9 @@ class DIContainer {
     private static _createUnidadeUseCase = new CreateUnidadeUseCase(this._unidadeRepository);
     private static _updateUnidadeUseCase = new UpdateUnidadeUseCase(this._unidadeRepository);
     private static _deleteUnidadeUseCase = new DeleteUnidadeUseCase(this._unidadeRepository);
-    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository);
-    private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository);
-    private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService);
+    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
+    private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
+    private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService, this._bnccRepository);
     private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository);
     private static _updateAtividadeUseCase = new UpdateAtividadeUseCase(this._unidadeRepository);
 

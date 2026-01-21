@@ -1,0 +1,194 @@
+[
+    {
+        "codigo": "EM13CHS101",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Identificar, analisar e comparar diferentes fontes e narrativas expressas em diversas linguagens, com vistas à compreensão de ideias filosóficas e de processos e eventos históricos, geográficos, políticos, econômicos, sociais, ambientais e culturais."
+    },
+    {
+        "codigo": "EM13CHS102",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Identificar, analisar e discutir as circunstâncias históricas, geográficas, políticas, econômicas, sociais, ambientais e culturais de matrizes conceituais (etnocentrismo, racismo, evolução, modernidade, cooperativismo/desenvolvimento etc.), avaliando criticamente seu significado histórico e comparando-as a narrativas que contemplem outros agentes e discursos."
+    },
+    {
+        "codigo": "EM13CHS103",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Elaborar hipóteses, selecionar evidências e compor argumentos relativos a processos políticos, econômicos, sociais, ambientais, culturais e epistemológicos, com base na sistematização de dados e informações de diversas naturezas (expressões artísticas, textos filosóficos e sociológicos, documentos históricos e geográficos, gráficos, mapas, tabelas, tradições orais, entre outros)."
+    },
+    {
+        "codigo": "EM13CHS104",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar objetos e vestígios da cultura material e imaterial de modo a identificar conhecimentos, valores, crenças e práticas que caracterizam a identidade e a diversidade cultural de diferentes sociedades inseridas no tempo e no espaço."
+    },
+    {
+        "codigo": "EM13CHS105",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Identificar, contextualizar e criticar tipologias evolutivas (populações nômades e sedentárias, entre outras) e oposições dicotômicas (cidade/campo, cultura/natureza, civilizados/bárbaros, razão/emoção, material/virtual etc.), explicitando suas ambiguidades."
+    },
+    {
+        "codigo": "EM13CHS106",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Utilizar as linguagens cartográfica, gráfica e iconográfica, diferentes gêneros textuais e tecnologias digitais de informação e comunicação de forma crítica, significativa, reflexiva e ética nas diversas práticas sociais, incluindo as escolares, para se comunicar, acessar e difundir informações, produzir conhecimentos, resolver problemas e exercer protagonismo e autoria na vida pessoal e coletiva."
+    },
+    {
+        "codigo": "EM13CHS201",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar e caracterizar as dinâmicas das populações, das mercadorias e do capital nos diversos continentes, com destaque para a mobilidade e a fixação de pessoas, grupos humanos e povos, em função de eventos naturais, políticos, econômicos, sociais, religiosos e culturais."
+    },
+    {
+        "codigo": "EM13CHS202",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar e avaliar os impactos das tecnologias na estruturação e nas dinâmicas de grupos, povos e sociedades contemporâneos, bem como suas interferências nas decisões políticas, sociais, ambientais, econômicas e culturais."
+    },
+    {
+        "codigo": "EM13CHS203",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Comparar os significados de território, fronteiras e vazio (espacial, temporal e cultural) em diferentes sociedades, contextualizando e relativizando visões dualistas."
+    },
+    {
+        "codigo": "EM13CHS204",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Comparar e avaliar os processos de ocupação do espaço e a formação de territórios, territorialidades e fronteiras, identificando o papel de diferentes agentes e considerando conflitos populacionais e diversidade étnico-cultural."
+    },
+    {
+        "codigo": "EM13CHS301",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Problematizar hábitos e práticas individuais e coletivos de produção, reaproveitamento e descarte de resíduos, elaborando propostas que promovam a sustentabilidade socioambiental."
+    },
+    {
+        "codigo": "EM13CHS302",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar e avaliar criticamente os impactos econômicos e socioambientais de cadeias produtivas ligadas à exploração de recursos naturais e às atividades agropecuárias."
+    },
+    {
+        "codigo": "EM13CHS401",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Identificar e analisar as relações entre sujeitos, grupos e sociedades diante das transformações técnicas, tecnológicas e informacionais e das novas formas de trabalho."
+    },
+    {
+        "codigo": "EM13CHS501",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar os fundamentos da ética em diferentes culturas, tempos e espaços, identificando processos que contribuem para a formação de sujeitos éticos."
+    },
+    {
+        "codigo": "EM13CHS601",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Ciências Humanas",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Identificar e analisar as demandas e os protagonismos políticos, sociais e culturais dos povos indígenas e das populações afrodescendentes no Brasil contemporâneo."
+    },
+    {
+        "codigo": "EM13LGG105",
+        "nivel": "Ensino Médio",
+        "area": "Ciências Humanas e Sociais Aplicadas",
+        "componente": "Linguagens (Interdisciplinar)",
+        "serie": [
+            "1º Ano",
+            "2º Ano",
+            "3º Ano"
+        ],
+        "descricao": "Analisar e experimentar diversos processos de remidiação de produções multissemióticas, multimídia e transmídia, desenvolvendo diferentes modos de participação e intervenção social."
+    }
+]

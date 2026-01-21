@@ -1,7 +1,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { IAIService } from "../../model/services/IAIService";
-import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa } from "../../model/entities";
+import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC } from "../../model/entities";
 
 const SYSTEM_PROMPT = `
 Você é um assistente pedagógico especialista na BNCC (Base Nacional Comum Curricular) do Brasil.
@@ -47,12 +47,24 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generatePlanoAula(unidade: Unidade, context?: UserContext): Promise<Partial<PlanoAula>> {
+    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<PlanoAula>> {
+        const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
+
         const prompt = `
         Contexto: Planejamento de aula para a unidade "${unidade.tema}" da disciplina de ${unidade.disciplina?.nome || "Não especificada"}.
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
-        Tarefa: Crie um plano de aula detalhado seguindo a BNCC.
+        UTILIZE as habilidades da BNCC abaixo como referência principal:
+        ${bnccContext}
+        
+        INSTRUÇÕES DE ALINHAMENTO BNCC:
+        1. Se houver habilidades na lista que correspondam EXATAMENTE ao tema "${unidade.tema}", use-as.
+        2. Se o tema NÃO estiver explicitamente citado nas habilidades, escolha as habilidades da lista que sejam CONCEITUALMENTE MAIS PRÓXIMAS ou que sirvam de suporte para o tema.
+        3. JUSTIFIQUE no campo "conteudo" como o tema "${unidade.tema}" se conecta com os códigos BNCC escolhidos.
+        4. Se a lista de habilidades fornecida estiver vazia, gere um plano genérico, mas avise explicitamente que nenhuma habilidade BNCC foi encontrada no repositório local.
+
+        
+        Tarefa: Crie um plano de aula detalhado seguindo a BNCC, citando os códigos das habilidades trabalhadas.
         
         Formato de Resposta (JSON):
         {
@@ -60,10 +72,10 @@ export class GeminiAIService implements IAIService {
             "duracao": "Estimativa de tempo (ex: 50 minutos)",
             "objetivos": ["Objetivo 1", "Objetivo 2"],
             "conteudo_programatico": "Descrição dos tópicos abordados",
-            "metodologia": "Estartégias de ensino",
+            "metodologia": "Estratégias de ensino",
             "recursos_didaticos": ["Recurso 1", "Recurso 2"],
             "avaliacao": "Método de avaliação",
-            "conteudo": "Texto completo do plano de aula em Markdown para leitura do professor"
+            "conteudo": "Texto completo do plano de aula em Markdown para leitura do professor. Mencione as habilidades ${habilidadesBNCC.map(h => h.codigo).join(", ")} no texto."
         }
         `;
 
@@ -80,12 +92,20 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generateAtividade(unidade: Unidade, context?: UserContext): Promise<Partial<AtividadeAvaliativa>> {
+    async generateAtividade(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<AtividadeAvaliativa>> {
+        const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
+        const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
+
         const prompt = `
         Contexto: Atividade avaliativa para a unidade "${unidade.tema}".
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
-        Tarefa: Crie uma atividade avaliativa com 3 questões (misturando múltipla escolha e dissertativa).
+        UTILIZE EXCLUSIVAMENTE as habilidades da BNCC abaixo:
+        ${bnccContext}
+        
+        NÃO crie conteúdos fora dessas habilidades de código: ${codigosBNCC}.
+        
+        Tarefa: Crie uma atividade avaliativa com 3 questões (misturando múltipla escolha e dissertativa), focada nessas habilidades.
         
         Formato de Resposta (JSON):
         {
@@ -96,7 +116,7 @@ export class GeminiAIService implements IAIService {
             "questoes": [
                 {
                     "id": "1",
-                    "enunciado": "Texto da questão",
+                    "enunciado": "Texto da questão. Deve avaliar a habilidade [CODIGO_BNCC]",
                     "tipo": "multipla_escolha",
                     "alternativas": ["A", "B", "C", "D"],
                     "resposta_correta": "A",
@@ -104,7 +124,7 @@ export class GeminiAIService implements IAIService {
                 },
                 {
                     "id": "2",
-                    "enunciado": "Texto da questão",
+                    "enunciado": "Texto da questão (Citar habilidade avaliada se possível)",
                     "tipo": "dissertativa",
                     "pontuacao": 4
                 }
@@ -126,7 +146,7 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generateSlides(unidade: Unidade, context?: UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
+    async generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
         // Since we are not actually generating a PPTX file here (that would be backend or another service), 
         // we will generate the TEXT CONTENT for the slides which presumably the frontend or another service uses.
         // However, the interface requires returning a URL.
@@ -135,11 +155,13 @@ export class GeminiAIService implements IAIService {
         // Looking at MockAIService, it returns a fake URL.
         // I will return a fake URL but maybe I can generate valid slide content in the future.
 
+        const bnccCodes = habilidadesBNCC.map(h => h.codigo).join(", ");
+
         return {
-            titulo: `Slides: ${unidade.tema} (Gerado por IA)`,
+            titulo: `Slides: ${unidade.tema} (BNCC: ${bnccCodes})`,
             slides_count: 10,
             url: "#",
-            message: "A geração de arquivo PPTX real requer integração com biblioteca de slides. (Simulação: Conteúdo gerado internamente)"
+            message: `Slides gerados com base nas habilidades: ${bnccCodes}. (Simulação)`
         };
     }
 }
