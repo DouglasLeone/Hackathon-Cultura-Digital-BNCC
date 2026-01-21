@@ -6,7 +6,10 @@ import {
     doc,
     query,
     orderBy,
-    getCountFromServer
+    getCountFromServer,
+    updateDoc,
+    where,
+    limit
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { HistoricoGeracao } from '../../../model/entities';
@@ -63,6 +66,28 @@ export class FirestoreGenIARepository implements IGenIARepository {
             id: docRef.id,
             ...data
         };
+    }
+
+    async updateHistorico(id: string, data: Partial<HistoricoGeracao>): Promise<void> {
+        const docRef = doc(db, this.historicoCollection, id);
+        await updateDoc(docRef, data);
+    }
+
+    async getHistoricoByReferenceId(referenciaId: string): Promise<HistoricoGeracao | null> {
+        const q = query(
+            collection(db, this.historicoCollection),
+            where('referencia_id', '==', referenciaId),
+            limit(1)
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const doc = querySnapshot.docs[0];
+            return {
+                id: doc.id,
+                ...doc.data()
+            } as HistoricoGeracao;
+        }
+        return null;
     }
 
     async deleteHistorico(id: string): Promise<void> {
