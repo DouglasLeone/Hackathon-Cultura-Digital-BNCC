@@ -1,21 +1,31 @@
 import { IAIService } from '../model/services/IAIService';
 import { Unidade } from '../model/entities';
 import { BNCCRepository } from '../infra/repositories/BNCCRepository';
+import { IUnidadeRepository } from '../model/repositories/IUnidadeRepository';
 
 export class GenerateSlidesUseCase {
     constructor(
         private aiService: IAIService,
-        private bnccRepository: BNCCRepository
+        private bnccRepository: BNCCRepository,
+        private repository: IUnidadeRepository
     ) { }
 
     async execute(unidade: Unidade) {
-        let habilidadesBNCC: any[] = [];
+        let habilidadesBNCC: import('../model/entities').HabilidadeBNCC[] = [];
         if (unidade.disciplina) {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }
 
-        // Slides might not be persisted in the same way or just returned as a link/blob
-        // For now we just return the result from AI
-        return await this.aiService.generateSlides(unidade, habilidadesBNCC);
+        const generatedContent = await this.aiService.generateSlides(unidade, habilidadesBNCC);
+
+        // Persist generated slides
+        const savedSlides = await this.repository.createMaterialSlides({
+            unidade_id: unidade.id,
+            titulo: `Slides: ${unidade.tema}`,
+            conteudo: generatedContent,
+            arquivado: false
+        });
+
+        return savedSlides;
     }
 }

@@ -63,7 +63,9 @@ const UnidadeDetailScreen = () => {
 
         generateSlides,
         archivePlanoAula,
-        archiveAtividade
+        archiveAtividade,
+        archiveSlides,
+        slides
     } = useUnidadeDetailViewModel(unidadeId || '');
 
     if (loading) {
@@ -260,30 +262,65 @@ const UnidadeDetailScreen = () => {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Slides</CardTitle>
-                            <Presentation className="h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center gap-2">
+                                <Presentation className="h-4 w-4 text-muted-foreground" />
+                                {unidade.material_slides && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Abrir menu</span>
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={archiveSlides} className="text-destructive focus:text-destructive">
+                                                <Archive className="mr-2 h-4 w-4" />
+                                                Arquivar
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="pt-4">
-                                <p className="text-sm text-muted-foreground mb-4">Gerador de Slides (Beta)</p>
-                                <Button
-                                    onClick={generateSlides}
-                                    disabled={generating === 'slides'}
-                                    className="w-full"
-                                    variant="secondary"
-                                >
-                                    {generating === 'slides' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Gerar Slides
-                                </Button>
-                            </div>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full mt-2">Visualizar Slides</Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-4xl w-full">
-                                    <DialogTitle>Slides: {unidade.tema}</DialogTitle>
-                                    <ViewComponentsSlidesViewer title={`Slides: ${unidade.tema}`} />
-                                </DialogContent>
-                            </Dialog>
+                            {slides ? (
+                                <div className="space-y-4 pt-4">
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full mt-2">
+                                                <Presentation className="w-4 h-4 mr-2" />
+                                                Visualizar Slides
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-4xl w-full">
+                                            {/* DialogTitle is required for accessibility but hidden visually if needed, or we keep it generic */}
+                                            <DialogTitle>Slides: {unidade.tema}</DialogTitle>
+                                            <ViewComponentsSlidesViewer
+                                                title={`Slides: ${unidade.tema}`}
+                                                slides={slides}
+                                            />
+                                        </DialogContent>
+                                    </Dialog>
+                                    {unidade.material_slides && (
+                                        <Badge variant="outline" className="mt-2 w-full justify-center">
+                                            Gerado em: {new Date(unidade.material_slides.created_at).toLocaleDateString()}
+                                        </Badge>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="pt-4">
+                                    <p className="text-sm text-muted-foreground mb-4">Nenhum slide gerado.</p>
+                                    <Button
+                                        onClick={generateSlides}
+                                        disabled={generating === 'slides'}
+                                        className="w-full"
+                                        variant="secondary"
+                                    >
+                                        {generating === 'slides' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Gerar Slides
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>

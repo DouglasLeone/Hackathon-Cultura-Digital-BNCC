@@ -62,6 +62,17 @@ export interface Unidade {
   disciplina?: Disciplina;
   plano_aula?: PlanoAula;
   atividade_avaliativa?: AtividadeAvaliativa;
+  material_slides?: MaterialSlides;
+}
+
+export interface MaterialSlides {
+  id: string;
+  unidade_id: string;
+  titulo: string;
+  conteudo: any[]; // Using any[] for SlideContent structure to keep it flexible
+  arquivado?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PlanoAula {

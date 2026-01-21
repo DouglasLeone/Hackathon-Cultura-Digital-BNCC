@@ -12,8 +12,15 @@ export interface IUnidadeRepository {
     // Linked materials
     getPlanoAula(unidadeId: string): Promise<PlanoAula | null>;
     createPlanoAula(plano: Omit<PlanoAula, 'id' | 'created_at' | 'updated_at'>): Promise<PlanoAula>;
-    updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<PlanoAula>;
+    updatePlanoAula(id: string, data: Partial<PlanoAula>): Promise<void>;
+
+    // Atividade Methods
+    createAtividade(data: Omit<AtividadeAvaliativa, 'id' | 'created_at' | 'updated_at'>): Promise<AtividadeAvaliativa>;
     getAtividade(unidadeId: string): Promise<AtividadeAvaliativa | null>;
-    createAtividade(atividade: Omit<AtividadeAvaliativa, 'id' | 'created_at' | 'updated_at'>): Promise<AtividadeAvaliativa>;
-    updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<AtividadeAvaliativa>;
+    updateAtividade(id: string, data: Partial<AtividadeAvaliativa>): Promise<void>;
+
+    // Slides Methods
+    createMaterialSlides(data: Omit<MaterialSlides, 'id' | 'created_at' | 'updated_at'>): Promise<MaterialSlides>;
+    getMaterialSlides(unidadeId: string): Promise<MaterialSlides | null>;
+    updateMaterialSlides(id: string, data: Partial<MaterialSlides>): Promise<void>;
 }
