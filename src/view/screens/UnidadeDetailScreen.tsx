@@ -9,7 +9,6 @@ import { Button } from '@/view/components/ui/button';
 import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ContentEditor } from '@/view/components/ContentEditor';
-import { PPTXService } from '@/infra/services/PPTXService';
 import { PDFService } from '@/infra/services/PDFService';
 import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
@@ -125,8 +124,8 @@ const UnidadeDetailScreen = () => {
                                                     if (!unidade.plano_aula) return;
                                                     await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo: content });
                                                 }}
-                                                onExport={() => unidade.plano_aula && PPTXService.generateLessonPlanPPTX(unidade.plano_aula.titulo, unidade.plano_aula.conteudo || '')}
-                                                exportLabel="Baixar PPTX"
+                                                onExport={() => unidade.plano_aula && PDFService.generateLessonPlanPDF(unidade.plano_aula, unidade.disciplina?.nome || 'Disciplina', unidade.tema)}
+                                                exportLabel="Baixar PDF"
                                                 variant="minimal"
                                                 hideTitle
                                             />
@@ -184,7 +183,7 @@ const UnidadeDetailScreen = () => {
                                                         throw e;
                                                     }
                                                 }}
-                                                onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa.titulo, formatActivityContent(unidade.atividade_avaliativa.questoes))}
+                                                onExport={() => unidade.atividade_avaliativa && PDFService.generateActivityPDF(unidade.atividade_avaliativa, unidade.disciplina?.nome || 'Disciplina', unidade.tema)}
                                                 exportLabel="Baixar PDF"
                                                 variant="minimal"
                                                 hideTitle

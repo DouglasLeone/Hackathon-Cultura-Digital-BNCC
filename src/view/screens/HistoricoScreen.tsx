@@ -11,6 +11,7 @@ import { useHistoricoViewModel } from '@/viewmodel/useHistoricoViewModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/view/components/ui/dialog';
 import { HistoricoGeracao } from '@/model/entities';
 import { PDFService } from '@/infra/services/PDFService';
+import { DIContainer } from '@/di/container';
 
 const HistoricoScreen = () => {
     const {
@@ -19,7 +20,8 @@ const HistoricoScreen = () => {
         loading,
         stats,
         filters,
-        deleteHistorico
+        deleteHistorico,
+        toggleArchive
     } = useHistoricoViewModel();
 
     const [selectedItem, setSelectedItem] = useState<HistoricoGeracao | null>(null);
@@ -104,39 +106,62 @@ const HistoricoScreen = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
-                    <div className="relative flex-1 w-full">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar por título ou descrição..."
-                            className="pl-8"
-                            value={filters.search}
-                            onChange={(e) => filters.setSearch(e.target.value)}
-                        />
+                <div className="flex flex-col space-y-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex space-x-2 bg-muted p-1 rounded-lg">
+                            <Button
+                                variant={!filters.arquivado ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => filters.setArquivado(false)}
+                                className="w-32"
+                            >
+                                Ativos
+                            </Button>
+                            <Button
+                                variant={filters.arquivado ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => filters.setArquivado(true)}
+                                className="w-32"
+                            >
+                                Arquivados
+                            </Button>
+                        </div>
                     </div>
-                    <Select value={filters.disciplina} onValueChange={filters.setDisciplina}>
-                        <SelectTrigger className="w-full md:w-[200px]">
-                            <SelectValue placeholder="Disciplina" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todas as Disciplinas</SelectItem>
-                            {disciplinas.map(d => (
-                                <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select value={filters.tipo} onValueChange={filters.setTipo}>
-                        <SelectTrigger className="w-full md:w-[200px]">
-                            <SelectValue placeholder="Tipo de Material" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos os Tipos</SelectItem>
-                            <SelectItem value="plano_aula">Planos de Aula</SelectItem>
-                            <SelectItem value="atividade">Atividades</SelectItem>
-                            <SelectItem value="slides">Slides</SelectItem>
-                            <SelectItem value="sugestao_unidade">Sugestões</SelectItem>
-                        </SelectContent>
-                    </Select>
+
+                    <div className="flex flex-col md:flex-row gap-4 items-center bg-card p-4 rounded-lg border shadow-sm">
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar por título ou descrição..."
+                                className="pl-8"
+                                value={filters.search}
+                                onChange={(e) => filters.setSearch(e.target.value)}
+                            />
+                        </div>
+                        <Select value={filters.disciplina} onValueChange={filters.setDisciplina}>
+                            <SelectTrigger className="w-full md:w-[200px]">
+                                <SelectValue placeholder="Disciplina" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas as Disciplinas</SelectItem>
+                                {disciplinas.map(d => (
+                                    <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={filters.tipo} onValueChange={filters.setTipo}>
+                            <SelectTrigger className="w-full md:w-[200px]">
+                                <SelectValue placeholder="Tipo de Material" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos os Tipos</SelectItem>
+                                <SelectItem value="plano_aula">Planos de Aula</SelectItem>
+                                <SelectItem value="atividade">Atividades</SelectItem>
+                                <SelectItem value="slides">Slides</SelectItem>
+                                <SelectItem value="sugestao_unidade">Sugestões</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {/* List */}
@@ -174,18 +199,29 @@ const HistoricoScreen = () => {
                                                 <Eye className="w-4 h-4 mr-2" />
                                                 Visualizar
                                             </Button>
+
                                             <Button
-                                                variant="destructive"
-                                                size="icon"
-                                                className="h-9 w-9"
-                                                onClick={() => {
-                                                    if (confirm("Tem certeza que deseja excluir este item do histórico?")) {
-                                                        deleteHistorico(item.id);
-                                                    }
-                                                }}
+                                                variant="secondary"
+                                                size="sm"
+                                                onClick={() => toggleArchive(item)}
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                {item.arquivado ? "Restaurar" : "Arquivar"}
                                             </Button>
+
+                                            {item.arquivado && (
+                                                <Button
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    className="h-9 w-9"
+                                                    onClick={() => {
+                                                        if (confirm("Tem certeza que deseja excluir DEFNITIVAMENTE este item?")) {
+                                                            deleteHistorico(item.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>
@@ -232,7 +268,39 @@ const HistoricoScreen = () => {
                             </div>
 
                             <div className="flex justify-end gap-2 pt-4">
-                                <Button variant="outline" onClick={() => selectedItem && PDFService.generatePDF(selectedItem)}>
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        if (!selectedItem || !selectedItem.unidade_id) {
+                                            alert("Dados insuficientes para gerar PDF.");
+                                            return;
+                                        }
+
+                                        try {
+                                            const disciplina = selectedItem.disciplina?.nome || 'Disciplina';
+                                            const tema = selectedItem.unidade?.tema || 'Tema';
+
+                                            if (selectedItem.tipo === 'plano_aula') {
+                                                const fullPlano = await DIContainer.unidadeRepository.getPlanoAula(selectedItem.unidade_id);
+                                                if (fullPlano) {
+                                                    PDFService.generateLessonPlanPDF(fullPlano, disciplina, tema);
+                                                } else {
+                                                    alert("Detalhes do plano não encontrados.");
+                                                }
+                                            } else if (selectedItem.tipo === 'atividade') {
+                                                const fullAtividade = await DIContainer.unidadeRepository.getAtividade(selectedItem.unidade_id);
+                                                if (fullAtividade) {
+                                                    PDFService.generateActivityPDF(fullAtividade, disciplina, tema);
+                                                } else {
+                                                    alert("Detalhes da atividade não encontrados.");
+                                                }
+                                            }
+                                        } catch (error) {
+                                            console.error("Erro ao gerar PDF:", error);
+                                            alert("Erro ao baixar PDF. Tente novamente.");
+                                        }
+                                    }}
+                                >
                                     <Download className="w-4 h-4 mr-2" />
                                     Download PDF
                                 </Button>
