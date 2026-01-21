@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { DIContainer } from '../di/container';
+import { HistoricoGeracao } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -11,6 +12,7 @@ export const useHistoricoViewModel = () => {
     const [filterDisciplina, setFilterDisciplina] = useState<string>('all');
     const [filterTipo, setFilterTipo] = useState<string>('all');
     const [filterSearch, setFilterSearch] = useState<string>('');
+    const [filterArquivado, setFilterArquivado] = useState<boolean>(false);
 
     // Fetch Data using React Query
     const { data: historico = [], isLoading: loadingHistorico } = useQuery({
@@ -64,6 +66,26 @@ export const useHistoricoViewModel = () => {
 
     const deleteHistorico = (id: string) => deleteMutation.mutate(id);
 
+    // Archive Mutation
+    const archiveMutation = useMutation({
+        mutationFn: async (item: { id: string, tipo: string, arquivado?: boolean }) => {
+            const novoEstado = !item.arquivado;
+            if (item.tipo === 'plano_aula') {
+                return DIContainer.updatePlanoAulaUseCase.execute(item.id, { arquivado: novoEstado });
+            } else if (item.tipo === 'atividade') {
+                return DIContainer.updateAtividadeUseCase.execute(item.id, { arquivado: novoEstado });
+            }
+            throw new Error("Tipo não suportado para arquivamento");
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['historico'] });
+            toast({ title: "Sucesso", description: "Status atualizado." });
+        },
+        onError: () => toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" })
+    });
+
+    const toggleArchive = (item: HistoricoGeracao) => archiveMutation.mutate(item);
+
     const filteredHistorico = useMemo(() => {
         return historico.filter(item => {
             const matchDisciplina = filterDisciplina === 'all' || item.disciplina_id === filterDisciplina;
@@ -73,9 +95,14 @@ export const useHistoricoViewModel = () => {
                 item.titulo.toLowerCase().includes(searchTerm) ||
                 (item.descricao && item.descricao.toLowerCase().includes(searchTerm));
 
-            return matchDisciplina && matchTipo && matchSearch;
+            // Arquivado logic: if filterArquivado is true, return only archived items.
+            // If false, return only active items (undefined or false).
+            const isArchived = !!item.arquivado;
+            const matchArquivado = filterArquivado ? isArchived : !isArchived;
+
+            return matchDisciplina && matchTipo && matchSearch && matchArquivado;
         });
-    }, [historico, filterDisciplina, filterTipo, filterSearch]);
+    }, [historico, filterDisciplina, filterTipo, filterSearch, filterArquivado]);
 
     const stats = useMemo(() => {
         return {
@@ -96,10 +123,13 @@ export const useHistoricoViewModel = () => {
             tipo: filterTipo,
             setTipo: setFilterTipo,
             search: filterSearch,
-            setSearch: setFilterSearch
+            setSearch: setFilterSearch,
+            arquivado: filterArquivado,
+            setArquivado: setFilterArquivado
         },
         stats,
         deleteHistorico,
+        toggleArchive,
         refresh: () => queryClient.invalidateQueries({ queryKey: ['historico'] })
     };
 };

@@ -72,6 +72,10 @@ class DIContainer {
         return this._genIARepository;
     }
 
+    static get unidadeRepository() {
+        return this._unidadeRepository;
+    }
+
     static get logMaterialGenerationUseCase() {
         return this._logMaterialGenerationUseCase;
     }
