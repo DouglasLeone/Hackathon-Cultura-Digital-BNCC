@@ -2,12 +2,14 @@ import { IUnidadeRepository } from '../model/repositories/IUnidadeRepository';
 import { IUserRepository } from '../model/repositories/IUserRepository';
 import { IAIService } from '../model/services/IAIService';
 import { Unidade } from '../model/entities';
+import { BNCCRepository } from '../infra/repositories/BNCCRepository';
 
 export class GenerateAtividadeUseCase {
     constructor(
         private repository: IUnidadeRepository,
         private aiService: IAIService,
-        private userRepository: IUserRepository
+        private userRepository: IUserRepository,
+        private bnccRepository: BNCCRepository
     ) { }
 
     async execute(unidade: Unidade, userId?: string) {
@@ -15,7 +17,14 @@ export class GenerateAtividadeUseCase {
         if (userId) {
             context = await this.userRepository.getUserContext(userId) || undefined;
         }
-        const generatedAtividade = await this.aiService.generateAtividade(unidade, context);
+
+
+        let habilidadesBNCC: any[] = [];
+        if (unidade.disciplina) {
+            habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
+        }
+
+        const generatedAtividade = await this.aiService.generateAtividade(unidade, habilidadesBNCC, context);
 
         // Ensure defaults for required fields
         const atividadeToSave = {
