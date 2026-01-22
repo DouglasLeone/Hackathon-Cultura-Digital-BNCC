@@ -1,7 +1,7 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { IAIService } from "../../model/services/IAIService";
-import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC } from "../../model/entities";
+import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC, SlideContent } from "../../model/entities";
 
 const SYSTEM_PROMPT = `
 Você é um assistente pedagógico especialista na BNCC (Base Nacional Comum Curricular) do Brasil.
@@ -12,7 +12,7 @@ Mantenha um tom profissional, encorajador e educativo.
 
 export class GeminiAIService implements IAIService {
     private genAI: GoogleGenerativeAI;
-    private model: any;
+    private model: GenerativeModel;
 
     constructor() {
         const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
@@ -146,22 +146,47 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<{ titulo: string; slides_count: number; url: string; message: string }> {
-        // Since we are not actually generating a PPTX file here (that would be backend or another service), 
-        // we will generate the TEXT CONTENT for the slides which presumably the frontend or another service uses.
-        // However, the interface requires returning a URL.
-        // For the purpose of this task (backend logic), I will simulate the structure generation and return a success message.
-        // If the real requirement is to generate the PPTX binary, we would need 'pptxgenjs' here.
-        // Looking at MockAIService, it returns a fake URL.
-        // I will return a fake URL but maybe I can generate valid slide content in the future.
+    async generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<SlideContent[]> {
+        const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
+        const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
-        const bnccCodes = habilidadesBNCC.map(h => h.codigo).join(", ");
+        const prompt = `
+        Contexto: Apresentação de slides para uma aula sobre "${unidade.tema}".
+        Disciplina: ${unidade.disciplina?.nome || "Geral"}.
+        Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
+        
+        Baseie-se nestas habilidades BNCC:
+        ${bnccContext}
+        
+        Tarefa: Crie o conteúdo para uma apresentação de 5 a 8 slides.
+        
+        Formato de Resposta (JSON Array de Objetos):
+        [
+            {
+                "titulo": "Título do Slide (ex: Introdução, Conceito X, Conclusão)",
+                "conteudo": ["Tópico 1 (curto)", "Tópico 2"],
+                "anotacoes": "Sugestão de fala para o professor explicar este slide."
+            }
+        ]
+        
+        Garanta que o primeiro slide seja a Capa e o último as Referências/Encerramento.
+        Mencione os códigos BNCC (${codigosBNCC}) em algum slide pertinente (ex: Objetivos).
+        `;
 
-        return {
-            titulo: `Slides: ${unidade.tema} (BNCC: ${bnccCodes})`,
-            slides_count: 10,
-            url: "#",
-            message: `Slides gerados com base nas habilidades: ${bnccCodes}. (Simulação)`
-        };
+        try {
+            const result = await this.model.generateContent({
+                contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            });
+            const response = result.response;
+            const text = response.text();
+            return JSON.parse(text);
+        } catch (error) {
+            console.error("Error generating slides:", error);
+            // Fallback mock in case of failure
+            return [
+                { titulo: "Erro na geração", conteudo: ["Não foi possível gerar os slides pela IA."], anotacoes: "Tente novamente." }
+            ];
+        }
     }
 }

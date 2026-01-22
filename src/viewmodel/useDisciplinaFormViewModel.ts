@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
+import { DisciplinaSchema } from '../model/schemas';
 
 interface UseDisciplinaFormViewModelProps {
     onSuccess?: () => void;
@@ -16,6 +17,18 @@ export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewM
     const createDisciplina = async (disciplina: Omit<Disciplina, 'id' | 'created_at' | 'updated_at' | 'nivel'>) => {
         setLoading(true);
         try {
+            // Validate input com Zod
+            const validationResult = DisciplinaSchema.safeParse(disciplina);
+            if (!validationResult.success) {
+                const firstError = validationResult.error.errors[0];
+                toast({
+                    title: "Erro de Validação",
+                    description: firstError.message,
+                    variant: "destructive",
+                });
+                return;
+            }
+
             await DIContainer.createDisciplinaUseCase.execute(disciplina);
             toast({
                 title: "Sucesso",
