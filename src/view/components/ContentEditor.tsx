@@ -53,7 +53,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
     const containerStyles = variant === 'default'
         ? "bg-white border rounded-lg shadow-sm p-6 w-full"
-        : "w-full h-full flex flex-col";
+        : "w-full flex-1 min-h-0 flex flex-col";
 
     return (
         <div className={containerStyles}>
