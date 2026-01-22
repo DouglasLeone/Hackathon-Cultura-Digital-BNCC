@@ -19,7 +19,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/view/components/ui/dropdown-menu";
-import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft, MoreVertical, Archive } from 'lucide-react';
+import { FileText, ClipboardList, Presentation, Loader2, ArrowLeft, MoreVertical, Archive, BookOpen, Info } from 'lucide-react';
 
 import {
     Breadcrumb,
@@ -101,11 +101,77 @@ const UnidadeDetailScreen = () => {
                     </BreadcrumbList>
                 </Breadcrumb>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between items-start">
                     <div>
                         <h1 className="text-3xl font-bold edu-gradient-text">{unidade.tema}</h1>
                         <p className="text-muted-foreground mt-2">{unidade.contexto_cultura_digital}</p>
                     </div>
+
+                    {(unidade.plano_aula?.habilidades_possiveis || unidade.atividade_avaliativa?.habilidades_possiveis) && (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    <BookOpen className="h-4 w-4" />
+                                    Habilidades BNCC
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                        <BookOpen className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <div>
+                                        <DialogTitle className="text-xl font-bold">Habilidades BNCC da Unidade</DialogTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            Competências trabalhadas nesta aula alinhadas à base curricular
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Consolidated BNCC Skills List */}
+                                    {(() => {
+                                        const habilidades = unidade.plano_aula?.habilidades_possiveis || unidade.atividade_avaliativa?.habilidades_possiveis;
+                                        if (!habilidades || habilidades.length === 0) return null;
+
+                                        return (
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Badge variant="outline" className="text-primary border-primary/20">
+                                                        {habilidades.length} habilidades identificadas
+                                                    </Badge>
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {habilidades.map(hab => (
+                                                        <div
+                                                            key={`bncc-${hab.codigo}`}
+                                                            className="flex flex-col p-4 rounded-xl border bg-muted/20 hover:bg-muted/40 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <Badge className="font-mono bg-primary/80">{hab.codigo}</Badge>
+                                                            </div>
+                                                            <p className="text-sm text-foreground leading-relaxed">
+                                                                {hab.descricao}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Info footer */}
+                                    <div className="pt-4 border-t">
+                                        <p className="text-xs text-muted-foreground italic flex gap-2">
+                                            <Info className="h-4 w-4 text-primary/60" />
+                                            Estas habilidades servem como base para o Plano de Aula, Atividade e Slides,
+                                            garantindo que todo o material pedagógico desta unidade esteja alinhado com a BNCC.
+                                        </p>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -324,8 +390,9 @@ const UnidadeDetailScreen = () => {
                         </CardContent>
                     </Card>
                 </div>
+
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 };
 
