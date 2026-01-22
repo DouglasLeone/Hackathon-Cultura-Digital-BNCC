@@ -39,6 +39,7 @@ const DisciplinaDetailScreen = () => {
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingUnidade, setEditingUnidade] = useState<Unidade | null>(null);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     // Initial loading state for the whole page if main entity is missing
     if (loadingDisciplina) {
@@ -108,9 +109,21 @@ const DisciplinaDetailScreen = () => {
                         </div>
                     </div>
                     {disciplina.descricao && (
-                        <p className="text-lg text-muted-foreground max-w-3xl leading-relaxed">
-                            {disciplina.descricao}
-                        </p>
+                        <div className="space-y-2 max-w-2xl">
+                            <p className={`text-lg text-muted-foreground leading-relaxed ${!isDescExpanded && disciplina.descricao.length > 200 ? 'line-clamp-3' : ''}`}>
+                                {disciplina.descricao}
+                            </p>
+                            {disciplina.descricao.length > 200 && (
+                                <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="p-0 h-auto font-medium text-primary hover:text-primary/80"
+                                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                >
+                                    {isDescExpanded ? 'Ver menos' : 'Ver mais'}
+                                </Button>
+                            )}
+                        </div>
                     )}
                 </div>
 
