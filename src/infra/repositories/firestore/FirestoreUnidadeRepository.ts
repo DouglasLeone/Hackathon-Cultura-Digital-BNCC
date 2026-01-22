@@ -49,24 +49,36 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         if (docSnap.exists()) {
             const unidade = { id: docSnap.id, ...docSnap.data() } as Unidade;
 
-            // Join discipline
-            if (unidade.disciplina_id) {
-                const disciplinaRef = doc(db, 'disciplinas', unidade.disciplina_id);
-                const disciplinaSnap = await getDoc(disciplinaRef);
-                if (disciplinaSnap.exists()) {
-                    unidade.disciplina = { id: disciplinaSnap.id, ...disciplinaSnap.data() } as import('../../../model/entities').Disciplina;
-                }
-            }
+            // Parallel fetch: disciplina + materials
+            const [disciplina, plano, atividade, slides] = await Promise.all([
+                unidade.disciplina_id ? this.getDisciplinaById(unidade.disciplina_id) : Promise.resolve(null),
+                this.getPlanoAula(unidade.id),
+                this.getAtividade(unidade.id),
+                this.getMaterialSlides(unidade.id)
+            ]);
 
-            // Fetch generic generated materials
-            unidade.plano_aula = await this.getPlanoAula(unidade.id) || undefined;
-            unidade.atividade_avaliativa = await this.getAtividade(unidade.id) || undefined;
-            unidade.material_slides = await this.getMaterialSlides(unidade.id) || undefined;
+            unidade.disciplina = disciplina || undefined;
+            unidade.plano_aula = plano || undefined;
+            unidade.atividade_avaliativa = atividade || undefined;
+            unidade.material_slides = slides || undefined;
 
             return unidade;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Helper method: Get single disciplina by ID
+     * Used for joins and batch operations
+     */
+    private async getDisciplinaById(id: string) {
+        const disciplinaRef = doc(db, 'disciplinas', id);
+        const disciplinaSnap = await getDoc(disciplinaRef);
+        if (disciplinaSnap.exists()) {
+            return { id: disciplinaSnap.id, ...disciplinaSnap.data() } as import('../../../model/entities').Disciplina;
+        }
+        return null;
     }
 
     async create(unidade: Omit<Unidade, 'id' | 'created_at' | 'updated_at' | 'disciplina'>): Promise<Unidade> {

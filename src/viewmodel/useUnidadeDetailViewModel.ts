@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
-import { Unidade, PlanoAula, AtividadeAvaliativa } from '../model/entities';
+import { Unidade, SlideContent } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
+import { useUserId } from '../hooks/useUserId';
 
-import { SlideContent } from '../model/services/IAIService';
 
 export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const [unidade, setUnidade] = useState<Unidade | null>(null);
@@ -12,6 +12,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const [generating, setGenerating] = useState<string | null>(null); // 'plano', 'atividade', 'slides'
     const [slides, setSlides] = useState<SlideContent[] | null>(null);
     const { toast } = useToast();
+    const userId = useUserId();
 
     const loadUnidade = useCallback(async () => {
         if (!unidadeId) return;
@@ -31,14 +32,11 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     }, [unidadeId, toast]);
 
-    const getUserId = () => localStorage.getItem('user_id');
-
     const generatePlanoAula = async () => {
         if (!unidade) return;
         setGenerating('plano');
         try {
-            const userId = getUserId();
-            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId || undefined);
+            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'plano_aula',
@@ -70,8 +68,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('atividade');
         try {
-            const userId = getUserId();
-            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId || undefined);
+            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'atividade',
