@@ -23,6 +23,7 @@ export class GenerateSlidesUseCase {
             unidade_id: unidade.id,
             titulo: `Slides: ${unidade.tema}`,
             conteudo: generatedContent,
+            habilidades_possiveis: habilidadesBNCC, // Added for consistency and future UI use
             arquivado: false
         });
 
