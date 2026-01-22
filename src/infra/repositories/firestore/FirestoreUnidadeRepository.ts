@@ -12,7 +12,7 @@ import {
     limit
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { Unidade, PlanoAula, AtividadeAvaliativa } from '../../../model/entities';
+import { Unidade, PlanoAula, AtividadeAvaliativa, MaterialSlides } from '../../../model/entities';
 import { IUnidadeRepository } from '../../../model/repositories/IUnidadeRepository';
 
 export class FirestoreUnidadeRepository implements IUnidadeRepository {
@@ -47,22 +47,36 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            const unidadeData = {
-                id: docSnap.id,
-                ...docSnap.data()
-            } as Unidade;
+            const unidade = { id: docSnap.id, ...docSnap.data() } as Unidade;
 
-            // Fetch related materials
-            const [plano, atividade] = await Promise.all([
-                this.getPlanoAula(unidadeData.id),
-                this.getAtividade(unidadeData.id)
+            // Parallel fetch: disciplina + materials
+            const [disciplina, plano, atividade, slides] = await Promise.all([
+                unidade.disciplina_id ? this.getDisciplinaById(unidade.disciplina_id) : Promise.resolve(null),
+                this.getPlanoAula(unidade.id),
+                this.getAtividade(unidade.id),
+                this.getMaterialSlides(unidade.id)
             ]);
 
-            return {
-                ...unidadeData,
-                plano_aula: plano || undefined,
-                atividade_avaliativa: atividade || undefined
-            };
+            unidade.disciplina = disciplina || undefined;
+            unidade.plano_aula = plano || undefined;
+            unidade.atividade_avaliativa = atividade || undefined;
+            unidade.material_slides = slides || undefined;
+
+            return unidade;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Helper method: Get single disciplina by ID
+     * Used for joins and batch operations
+     */
+    private async getDisciplinaById(id: string) {
+        const disciplinaRef = doc(db, 'disciplinas', id);
+        const disciplinaSnap = await getDoc(disciplinaRef);
+        if (disciplinaSnap.exists()) {
+            return { id: disciplinaSnap.id, ...disciplinaSnap.data() } as import('../../../model/entities').Disciplina;
         }
         return null;
     }
@@ -149,7 +163,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         };
     }
 
-    async updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<PlanoAula> {
+    async updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<void> {
         const docRef = doc(db, this.planosCollection, id);
         const now = new Date().toISOString();
         const dataToUpdate = {
@@ -162,14 +176,6 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         );
 
         await updateDoc(docRef, validData);
-
-        const updatedSnap = await getDoc(docRef);
-        if (!updatedSnap.exists()) throw new Error('PlanoAula not found after update');
-
-        return {
-            id: updatedSnap.id,
-            ...updatedSnap.data()
-        } as PlanoAula;
     }
 
     // AtividadeAvaliativa Methods
@@ -208,7 +214,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         };
     }
 
-    async updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<AtividadeAvaliativa> {
+    async updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<void> {
         const docRef = doc(db, this.atividadesCollection, id);
         const now = new Date().toISOString();
         const dataToUpdate = {
@@ -221,13 +227,43 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
         );
 
         await updateDoc(docRef, validData);
+    }
 
-        const updatedSnap = await getDoc(docRef);
-        if (!updatedSnap.exists()) throw new Error('AtividadeAvaliativa not found after update');
+    // Slides Methods
+    async createMaterialSlides(data: Omit<MaterialSlides, 'id' | 'created_at' | 'updated_at'>): Promise<MaterialSlides> {
+        const slidesRef = collection(db, 'material_slides');
+        const now = new Date().toISOString();
+        const docRef = await addDoc(slidesRef, {
+            ...data,
+            created_at: now,
+            updated_at: now
+        });
+        return { id: docRef.id, ...data, created_at: now, updated_at: now };
+    }
 
-        return {
-            id: updatedSnap.id,
-            ...updatedSnap.data()
-        } as AtividadeAvaliativa;
+    async getMaterialSlides(unidadeId: string): Promise<MaterialSlides | null> {
+        const q = query(
+            collection(db, 'material_slides'),
+            where('unidade_id', '==', unidadeId)
+            // Removed orderBy to avoid composite index requirement during hackathon
+            // orderBy('created_at', 'desc'),
+            // limit(1) 
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return null;
+
+        // In-memory sort to get the latest
+        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaterialSlides));
+        docs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        const latest = docs[0];
+        if (latest.arquivado) return null;
+
+        return latest;
+    }
+
+    async updateMaterialSlides(id: string, data: Partial<MaterialSlides>): Promise<void> {
+        const docRef = doc(db, 'material_slides', id);
+        await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
     }
 }

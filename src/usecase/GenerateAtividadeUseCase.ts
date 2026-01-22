@@ -18,8 +18,7 @@ export class GenerateAtividadeUseCase {
             context = await this.userRepository.getUserContext(userId) || undefined;
         }
 
-
-        let habilidadesBNCC: any[] = [];
+        let habilidadesBNCC: import('../model/entities').HabilidadeBNCC[] = [];
         if (unidade.disciplina) {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }

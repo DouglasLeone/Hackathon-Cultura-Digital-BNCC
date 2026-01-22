@@ -1,14 +1,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DIContainer } from '../di/container';
-import { Unidade, PlanoAula, AtividadeAvaliativa } from '../model/entities';
+import { Unidade, SlideContent } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
+import { useUserId } from '../hooks/useUserId';
+
 
 export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const [unidade, setUnidade] = useState<Unidade | null>(null);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState<string | null>(null); // 'plano', 'atividade', 'slides'
+    const [slides, setSlides] = useState<SlideContent[] | null>(null);
     const { toast } = useToast();
+    const userId = useUserId();
 
     const loadUnidade = useCallback(async () => {
         if (!unidadeId) return;
@@ -28,14 +32,11 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     }, [unidadeId, toast]);
 
-    const getUserId = () => localStorage.getItem('user_id');
-
     const generatePlanoAula = async () => {
         if (!unidade) return;
         setGenerating('plano');
         try {
-            const userId = getUserId();
-            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId || undefined);
+            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'plano_aula',
@@ -67,8 +68,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('atividade');
         try {
-            const userId = getUserId();
-            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId || undefined);
+            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'atividade',
@@ -100,19 +100,24 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('slides');
         try {
-            await DIContainer.generateSlidesUseCase.execute(unidade);
+            const result = await DIContainer.generateSlidesUseCase.execute(unidade);
+
+            // Result is now MaterialSlides entity
+            setUnidade(prev => prev ? { ...prev, material_slides: result } : null);
+            setSlides(result.conteudo);
 
             await DIContainer.logMaterialGenerationUseCase.execute({
                 tipo: 'slides',
                 titulo: `Slides: ${unidade.tema}`,
                 descricao: `Slides gerados para a unidade ${unidade.tema}`,
                 disciplina_id: unidade.disciplina_id,
-                unidade_id: unidade.id
+                unidade_id: unidade.id,
+                referencia_id: result.id
             });
 
             toast({
                 title: "Sucesso",
-                description: "Slides gerados com sucesso (simulação).",
+                description: "Slides gerados com sucesso.",
             });
         } catch (error) {
             console.error('Error generating slides:', error);
@@ -124,7 +129,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         } finally {
             setGenerating(null);
         }
-    }
+    };
 
     // New Archive methods
     const archivePlanoAula = async () => {
@@ -165,9 +170,37 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     };
 
+    const archiveSlides = async () => {
+        if (!unidade || !unidade.material_slides) return;
+        try {
+            await DIContainer.updateSlidesUseCase.execute(unidade.material_slides.id, { arquivado: true });
+            setUnidade(prev => prev ? { ...prev, material_slides: undefined } : null);
+            setSlides(null);
+            toast({
+                title: "Arquivado",
+                description: "Slides arquivados com sucesso.",
+            });
+        } catch (error) {
+            console.error('Error archiving slides:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível arquivar os slides.",
+                variant: "destructive",
+            });
+        }
+    };
+
     useEffect(() => {
         loadUnidade();
     }, [loadUnidade]);
+
+    useEffect(() => {
+        if (unidade?.material_slides) {
+            setSlides(unidade.material_slides.conteudo);
+        } else {
+            setSlides(null);
+        }
+    }, [unidade]);
 
     return {
         unidade,
@@ -178,6 +211,8 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         generateSlides,
         refresh: loadUnidade,
         archivePlanoAula,
-        archiveAtividade
+        archiveAtividade,
+        archiveSlides,
+        slides
     };
 };

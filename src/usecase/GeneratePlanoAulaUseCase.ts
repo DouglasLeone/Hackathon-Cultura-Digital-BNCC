@@ -3,6 +3,7 @@ import { IUserRepository } from '../model/repositories/IUserRepository';
 import { IAIService } from '../model/services/IAIService';
 import { Unidade } from '../model/entities';
 import { BNCCRepository } from '../infra/repositories/BNCCRepository';
+import { PlanoAulaSchema } from '../model/schemas';
 
 export class GeneratePlanoAulaUseCase {
     constructor(
@@ -18,12 +19,19 @@ export class GeneratePlanoAulaUseCase {
             context = await this.userRepository.getUserContext(userId) || undefined;
         }
 
-        let habilidadesBNCC: any[] = [];
+        let habilidadesBNCC: import('../model/entities').HabilidadeBNCC[] = [];
         if (unidade.disciplina) {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }
 
         const generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context);
+
+        // Validate AI response
+        const validationResult = PlanoAulaSchema.safeParse(generatedPlano);
+        if (!validationResult.success) {
+            console.warn('⚠️ AI response validation failed:', validationResult.error.errors);
+            // Prosseguir com defaults, mas logar para investigação
+        }
 
         // Ensure defaults for required fields if AI returns partial data
         const planoToSave = {
