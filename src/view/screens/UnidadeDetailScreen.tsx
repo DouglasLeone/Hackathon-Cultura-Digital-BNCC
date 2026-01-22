@@ -68,6 +68,8 @@ const UnidadeDetailScreen = () => {
         slides
     } = useUnidadeDetailViewModel(unidadeId || '');
 
+    const [isDescExpanded, setIsDescExpanded] = React.useState(false);
+
     if (loading) {
         return <AppLayout><div>Carregando...</div></AppLayout>;
     }
@@ -104,7 +106,23 @@ const UnidadeDetailScreen = () => {
                 <div className="flex items-center justify-between items-start">
                     <div>
                         <h1 className="text-3xl font-bold edu-gradient-text">{unidade.tema}</h1>
-                        <p className="text-muted-foreground mt-2">{unidade.contexto_cultura_digital}</p>
+                        {unidade.contexto_cultura_digital && (
+                            <div className="space-y-2 max-w-2xl mt-2">
+                                <p className={`text-muted-foreground leading-relaxed ${!isDescExpanded && unidade.contexto_cultura_digital.length > 200 ? 'line-clamp-3' : ''}`}>
+                                    {unidade.contexto_cultura_digital}
+                                </p>
+                                {unidade.contexto_cultura_digital.length > 200 && (
+                                    <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="p-0 h-auto font-medium text-primary hover:text-primary/80"
+                                        onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                    >
+                                        {isDescExpanded ? 'Ver menos' : 'Ver mais'}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {(unidade.plano_aula?.habilidades_possiveis || unidade.atividade_avaliativa?.habilidades_possiveis) && (
@@ -209,7 +227,7 @@ const UnidadeDetailScreen = () => {
                                                 Ver conteúdo
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
+                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6 overflow-hidden">
                                             <div className="flex items-center justify-between mb-2">
                                                 <DialogTitle className="text-xl font-bold">{unidade.plano_aula.titulo}</DialogTitle>
                                             </div>
@@ -279,7 +297,7 @@ const UnidadeDetailScreen = () => {
                                                 Ver conteúdo
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6">
+                                        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-6 overflow-hidden">
                                             <div className="flex items-center justify-between mb-2">
                                                 <DialogTitle className="text-xl font-bold">{unidade.atividade_avaliativa.titulo}</DialogTitle>
                                             </div>
