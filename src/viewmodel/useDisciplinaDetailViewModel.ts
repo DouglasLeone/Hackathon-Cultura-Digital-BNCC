@@ -1,27 +1,27 @@
 
 import { useState, useEffect } from 'react';
-import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
+import { useDI } from '../di/useDI';
 
-export const useDisciplinaDetailViewModel = (id: string) => {
+export const useDisciplinaDetailViewModel = (disciplinaId?: string) => {
+    const { getDisciplinaByIdUseCase } = useDI();
     const [disciplina, setDisciplina] = useState<Disciplina | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const load = async () => {
-            if (!id) return;
-            setLoading(true);
+            if (!disciplinaId) return;
             try {
-                const data = await DIContainer.getDisciplinaByIdUseCase.execute(id);
+                const data = await getDisciplinaByIdUseCase.execute(disciplinaId);
                 setDisciplina(data);
-            } catch (e) {
-                console.error(e);
+            } catch (error) {
+                console.error(error);
             } finally {
                 setLoading(false);
             }
         };
         load();
-    }, [id]);
+    }, [disciplinaId, getDisciplinaByIdUseCase]);
 
     return { disciplina, loading };
 }

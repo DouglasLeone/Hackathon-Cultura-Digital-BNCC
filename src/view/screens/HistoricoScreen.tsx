@@ -11,7 +11,6 @@ import { useHistoricoViewModel } from '@/viewmodel/useHistoricoViewModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/view/components/ui/dialog';
 import { HistoricoGeracao } from '@/model/entities';
 import { PDFService } from '@/infra/services/PDFService';
-import { DIContainer } from '@/di/container';
 
 const HistoricoScreen = () => {
     const {
@@ -21,7 +20,8 @@ const HistoricoScreen = () => {
         stats,
         filters,
         deleteHistorico,
-        toggleArchive
+        toggleArchive,
+        getFullUnidade
     } = useHistoricoViewModel();
 
     const [selectedItem, setSelectedItem] = useState<HistoricoGeracao | null>(null);
@@ -281,14 +281,16 @@ const HistoricoScreen = () => {
                                             const tema = selectedItem.unidade?.tema || 'Tema';
 
                                             if (selectedItem.tipo === 'plano_aula') {
-                                                const fullPlano = await DIContainer.unidadeRepository.getPlanoAula(selectedItem.unidade_id);
+                                                const unidadeFull = await getFullUnidade(selectedItem.unidade_id);
+                                                const fullPlano = unidadeFull?.plano_aula;
                                                 if (fullPlano) {
                                                     PDFService.generateLessonPlanPDF(fullPlano, disciplina, tema);
                                                 } else {
                                                     alert("Detalhes do plano não encontrados.");
                                                 }
                                             } else if (selectedItem.tipo === 'atividade') {
-                                                const fullAtividade = await DIContainer.unidadeRepository.getAtividade(selectedItem.unidade_id);
+                                                const unidadeFull = await getFullUnidade(selectedItem.unidade_id);
+                                                const fullAtividade = unidadeFull?.atividade_avaliativa;
                                                 if (fullAtividade) {
                                                     PDFService.generateActivityPDF(fullAtividade, disciplina, tema);
                                                 } else {

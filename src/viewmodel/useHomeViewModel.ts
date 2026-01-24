@@ -1,9 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { DIContainer } from '../di/container';
+import { useDI } from '../di/useDI';
 import { HistoricoGeracao } from '../model/entities';
 
 export const useHomeViewModel = () => {
+    const {
+        getAllDisciplinasUseCase,
+        getAllUnidadesUseCase,
+        getHistoricoUseCase,
+        getUserContextUseCase
+    } = useDI();
+
     const [stats, setStats] = useState({ disciplinas: 0, unidades: 0, planos: 0, atividades: 0 });
     const [historico, setHistorico] = useState<HistoricoGeracao[]>([]);
     const [loading, setLoading] = useState(true);
@@ -12,16 +19,16 @@ export const useHomeViewModel = () => {
         const loadData = async () => {
             try {
                 const uid = localStorage.getItem('user_id');
-                const ctx = uid ? await DIContainer.getUserContextUseCase.execute(uid) : null;
+                const ctx = uid ? await getUserContextUseCase.execute(uid) : null;
                 const allowedLevels = ctx?.niveis_ensino || [];
                 const hasFilter = allowedLevels.length > 0;
 
                 // Load all raw data needed for counting
                 // We load everything to ensure counts are accurate to the user context
                 const [disciplinas, unidades, historicoData] = await Promise.all([
-                    DIContainer.getAllDisciplinasUseCase.execute(),
-                    DIContainer.getAllUnidadesUseCase.execute(),
-                    DIContainer.genIARepository.getHistorico()
+                    getAllDisciplinasUseCase.execute(),
+                    getAllUnidadesUseCase.execute(),
+                    getHistoricoUseCase.execute()
                 ]);
 
                 // 1. Filter Disciplinas
@@ -34,26 +41,23 @@ export const useHomeViewModel = () => {
                 const filteredUnidades = hasFilter
                     ? unidades.filter(u => u.disciplina_id && disciplinaIds.has(u.disciplina_id))
                     : unidades;
-                const unidadeIds = new Set(filteredUnidades.map(u => u.id));
+                // const unidadeIds = new Set(filteredUnidades.map(u => u.id));
 
                 // 3. Filter Historico (Must belong to a valid Disciplina OR Unidade)
-                // Note: historico items usually link to disciplina/unidade.
                 const filteredHistorico = hasFilter
                     ? historicoData.filter(h => {
                         if (h.disciplina_id && disciplinaIds.has(h.disciplina_id)) return true;
-                        // Some items might only link to unidade? Usually both or discipline is key.
-                        // If orphan but we have filter, hide it? Yes.
+                        // Some items might only link to unidade, but usually unit is linked to discipline.
+                        // Ideally we check if unit is allowed too.
+                        if (h.unidade_id) {
+                            const unit = unidades.find(u => u.id === h.unidade_id);
+                            if (unit && unit.disciplina_id && disciplinaIds.has(unit.disciplina_id)) return true;
+                        }
                         return false;
                     })
                     : historicoData;
 
                 // 4. Calculate Stats
-                // We need counts for Planos and Atividades. 
-                // Since we don't have separate "GetAllPlanos" usecase exposed here easily (maybe), 
-                // we can rely on `historico` for generated content stats IF `historico` contains all generated items.
-                // The `getStats` usually counts `historico` items by type.
-                // So recalculating from `filteredHistorico` is actually the CORRECT way if 'stats' just sums up history types.
-
                 const stats = {
                     disciplinas: filteredDisciplinas.length,
                     unidades: filteredUnidades.length,
@@ -82,7 +86,7 @@ export const useHomeViewModel = () => {
         };
 
         loadData();
-    }, []);
+    }, [getAllDisciplinasUseCase, getAllUnidadesUseCase, getHistoricoUseCase, getUserContextUseCase]);
 
     return {
         stats,

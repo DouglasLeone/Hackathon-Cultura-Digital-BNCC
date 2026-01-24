@@ -1,0 +1,54 @@
+
+import { GetHomeDataUseCase } from '../usecase/GetHomeDataUseCase';
+import { GetAllDisciplinasUseCase } from '../usecase/GetAllDisciplinasUseCase';
+import { GetDisciplinaByIdUseCase } from '../usecase/GetDisciplinaByIdUseCase';
+import { CreateDisciplinaUseCase } from '../usecase/CreateDisciplinaUseCase';
+import { UpdateDisciplinaUseCase } from '../usecase/UpdateDisciplinaUseCase';
+import { DeleteDisciplinaUseCase } from '../usecase/DeleteDisciplinaUseCase';
+import { SuggestUnidadesUseCase } from '../usecase/SuggestUnidadesUseCase';
+import { GetAllUnidadesUseCase } from '../usecase/GetAllUnidadesUseCase';
+import { GetUnidadesByDisciplinaUseCase } from '../usecase/GetUnidadesByDisciplinaUseCase';
+import { GetUnidadeByIdUseCase } from '../usecase/GetUnidadeByIdUseCase';
+import { CreateUnidadeUseCase } from '../usecase/CreateUnidadeUseCase';
+import { UpdateUnidadeUseCase } from '../usecase/UpdateUnidadeUseCase';
+import { DeleteUnidadeUseCase } from '../usecase/DeleteUnidadeUseCase';
+import { GeneratePlanoAulaUseCase } from '../usecase/GeneratePlanoAulaUseCase';
+import { GenerateAtividadeUseCase } from '../usecase/GenerateAtividadeUseCase';
+import { GenerateSlidesUseCase } from '../usecase/GenerateSlidesUseCase';
+import { UpdatePlanoAulaUseCase } from '../usecase/UpdatePlanoAulaUseCase';
+import { UpdateAtividadeUseCase } from '../usecase/UpdateAtividadeUseCase';
+import { UpdateSlidesUseCase } from '../usecase/UpdateSlidesUseCase';
+import { LogMaterialGenerationUseCase } from '../usecase/LogMaterialGenerationUseCase';
+import { DeleteHistoricoUseCase } from '../usecase/DeleteHistoricoUseCase';
+import { GetUserContextUseCase } from '../usecase/GetUserContextUseCase';
+import { CreateUserContextUseCase } from '../usecase/CreateUserContextUseCase';
+import { UpdateUserContextUseCase } from '../usecase/UpdateUserContextUseCase';
+import { GetHistoricoUseCase } from '../usecase/GetHistoricoUseCase';
+
+export interface IContainer {
+    getHomeDataUseCase: GetHomeDataUseCase;
+    getHistoricoUseCase: GetHistoricoUseCase;
+    logMaterialGenerationUseCase: LogMaterialGenerationUseCase;
+    deleteHistoricoUseCase: DeleteHistoricoUseCase;
+    getAllDisciplinasUseCase: GetAllDisciplinasUseCase;
+    getDisciplinaByIdUseCase: GetDisciplinaByIdUseCase;
+    createDisciplinaUseCase: CreateDisciplinaUseCase;
+    updateDisciplinaUseCase: UpdateDisciplinaUseCase;
+    deleteDisciplinaUseCase: DeleteDisciplinaUseCase;
+    suggestUnidadesUseCase: SuggestUnidadesUseCase;
+    getAllUnidadesUseCase: GetAllUnidadesUseCase;
+    getUnidadesByDisciplinaUseCase: GetUnidadesByDisciplinaUseCase;
+    getUnidadeByIdUseCase: GetUnidadeByIdUseCase;
+    createUnidadeUseCase: CreateUnidadeUseCase;
+    updateUnidadeUseCase: UpdateUnidadeUseCase;
+    deleteUnidadeUseCase: DeleteUnidadeUseCase;
+    generatePlanoAulaUseCase: GeneratePlanoAulaUseCase;
+    generateAtividadeUseCase: GenerateAtividadeUseCase;
+    generateSlidesUseCase: GenerateSlidesUseCase;
+    updatePlanoAulaUseCase: UpdatePlanoAulaUseCase;
+    updateAtividadeUseCase: UpdateAtividadeUseCase;
+    updateSlidesUseCase: UpdateSlidesUseCase;
+    getUserContextUseCase: GetUserContextUseCase;
+    createUserContextUseCase: CreateUserContextUseCase;
+    updateUserContextUseCase: UpdateUserContextUseCase;
+}
