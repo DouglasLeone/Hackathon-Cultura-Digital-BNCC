@@ -3,7 +3,7 @@ import React from 'react';
 import { AppLayout } from '@/view/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/view/components/ui/card';
 import { Button } from '@/view/components/ui/button';
-import { Checkbox } from '@/view/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from "@/view/components/ui/radio-group"
 import { Label } from '@/view/components/ui/label';
 import { Loader2, Save } from 'lucide-react';
 import { useSettingsViewModel } from '@/viewmodel/useSettingsViewModel';
@@ -33,13 +33,13 @@ const SettingsScreen = () => {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="space-y-4">
+                        <RadioGroup
+                            value={niveis.length > 0 ? niveis[0] : ""}
+                            onValueChange={(value) => toggleNivel(value as any)}
+                            className="space-y-4"
+                        >
                             <div className="flex items-center space-x-2 border p-4 rounded-md">
-                                <Checkbox
-                                    id="fundamental"
-                                    checked={niveis.includes('Ensino Fundamental')}
-                                    onCheckedChange={() => toggleNivel('Ensino Fundamental')}
-                                />
+                                <RadioGroupItem value="Ensino Fundamental" id="fundamental" />
                                 <Label htmlFor="fundamental" className="flex-1 cursor-pointer">
                                     Ensino Fundamental
                                     <span className="block text-xs font-normal text-muted-foreground mt-1">
@@ -48,11 +48,7 @@ const SettingsScreen = () => {
                                 </Label>
                             </div>
                             <div className="flex items-center space-x-2 border p-4 rounded-md">
-                                <Checkbox
-                                    id="medio"
-                                    checked={niveis.includes('Ensino Médio')}
-                                    onCheckedChange={() => toggleNivel('Ensino Médio')}
-                                />
+                                <RadioGroupItem value="Ensino Médio" id="medio" />
                                 <Label htmlFor="medio" className="flex-1 cursor-pointer">
                                     Ensino Médio
                                     <span className="block text-xs font-normal text-muted-foreground mt-1">
@@ -60,7 +56,7 @@ const SettingsScreen = () => {
                                     </span>
                                 </Label>
                             </div>
-                        </div>
+                        </RadioGroup>
 
                         <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
                             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

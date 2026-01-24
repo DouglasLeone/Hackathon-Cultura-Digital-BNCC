@@ -49,11 +49,8 @@ export const useSettingsViewModel = () => {
     };
 
     const toggleNivel = (nivel: NivelEnsino) => {
-        setNiveis(prev =>
-            prev.includes(nivel)
-                ? prev.filter(n => n !== nivel)
-                : [...prev, nivel]
-        );
+        // Enforce single selection: replace the array with just the new selection
+        setNiveis([nivel]);
     };
 
     return {
