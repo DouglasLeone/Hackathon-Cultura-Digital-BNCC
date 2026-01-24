@@ -10,7 +10,6 @@ import { Button } from '@/view/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ContentEditor } from '@/view/components/ContentEditor';
 import { PDFService } from '@/infra/services/PDFService';
-import { DIContainer } from '@/di/container';
 import { SlidesViewer as ViewComponentsSlidesViewer } from '@/view/components/SlidesViewer';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/view/components/ui/dialog';
 import {
@@ -65,7 +64,9 @@ const UnidadeDetailScreen = () => {
         archivePlanoAula,
         archiveAtividade,
         archiveSlides,
-        slides
+        slides,
+        updatePlanoAula,
+        updateAtividade
     } = useUnidadeDetailViewModel(unidadeId || '');
 
     const [isDescExpanded, setIsDescExpanded] = React.useState(false);
@@ -235,8 +236,7 @@ const UnidadeDetailScreen = () => {
                                                 title={unidade.plano_aula.titulo}
                                                 initialContent={unidade.plano_aula.conteudo || ''}
                                                 onSave={async (content) => {
-                                                    if (!unidade.plano_aula) return;
-                                                    await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo: content });
+                                                    await updatePlanoAula(content);
                                                 }}
                                                 onExport={() => unidade.plano_aula && PDFService.generateLessonPlanPDF(unidade.plano_aula, unidade.disciplina?.nome || 'Disciplina', unidade.tema)}
                                                 exportLabel="Baixar PDF"
@@ -305,13 +305,11 @@ const UnidadeDetailScreen = () => {
                                                 title={unidade.atividade_avaliativa.titulo}
                                                 initialContent={formatActivityContent(unidade.atividade_avaliativa.questoes)}
                                                 onSave={async (content) => {
-                                                    if (!unidade.atividade_avaliativa) return;
                                                     try {
-                                                        const parsed = JSON.parse(content);
-                                                        await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
+                                                        await updateAtividade(content);
                                                     } catch (e) {
-                                                        console.error("Invalid JSON");
-                                                        alert("JSON inválido");
+                                                        console.error("Invalid JSON or Save Error");
+                                                        alert("Erro ao salvar ou JSON inválido");
                                                         throw e;
                                                     }
                                                 }}

@@ -1,10 +1,18 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { DIContainer } from '../di/container';
 import { Unidade, Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
+import { useDI } from '../di/useDI';
 
 export const useUnidadesListViewModel = (disciplinaId?: string) => {
+    const {
+        getUnidadesByDisciplinaUseCase,
+        getAllUnidadesUseCase,
+        createUnidadeUseCase,
+        deleteUnidadeUseCase,
+        updateUnidadeUseCase,
+        suggestUnidadesUseCase
+    } = useDI();
+
     const [unidades, setUnidades] = useState<Unidade[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
@@ -14,9 +22,9 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
         try {
             let data: Unidade[];
             if (disciplinaId) {
-                data = await DIContainer.getUnidadesByDisciplinaUseCase.execute(disciplinaId);
+                data = await getUnidadesByDisciplinaUseCase.execute(disciplinaId);
             } else {
-                data = await DIContainer.getAllUnidadesUseCase.execute();
+                data = await getAllUnidadesUseCase.execute();
             }
             setUnidades(data);
         } catch (error) {
@@ -29,35 +37,17 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
         } finally {
             setLoading(false);
         }
-    }, [disciplinaId, toast]);
+    }, [disciplinaId, getUnidadesByDisciplinaUseCase, getAllUnidadesUseCase, toast]);
 
-    const deleteUnidade = async (id: string) => {
+    const createUnidade = async (data: Omit<Unidade, 'id' | 'created_at' | 'updated_at' | 'disciplina'>) => {
         try {
-            await DIContainer.deleteUnidadeUseCase.execute(id);
-            setUnidades(prev => prev.filter(u => u.id !== id));
-            toast({
-                title: "Sucesso",
-                description: "Unidade excluída com sucesso.",
-            });
-        } catch (error) {
-            console.error('Error deleting unidade:', error);
-            toast({
-                title: "Erro",
-                description: "Não foi possível excluir a unidade.",
-                variant: "destructive",
-            });
-        }
-    };
-
-    // New create method
-    const createUnidade = async (unidade: Omit<Unidade, 'id' | 'created_at' | 'updated_at' | 'disciplina'>) => {
-        try {
-            await DIContainer.createUnidadeUseCase.execute(unidade);
+            const nova = await createUnidadeUseCase.execute(data);
+            setUnidades(prev => [nova, ...prev]);
             toast({
                 title: "Sucesso",
                 description: "Unidade criada com sucesso.",
             });
-            loadUnidades(); // Refresh list
+            return nova;
         } catch (error) {
             console.error('Error creating unidade:', error);
             toast({
@@ -65,18 +55,37 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
                 description: "Não foi possível criar a unidade.",
                 variant: "destructive",
             });
-            throw error; // Re-throw to handle in UI
+            throw error;
         }
-    }
+    };
+
+    const deleteUnidade = async (id: string) => {
+        try {
+            await deleteUnidadeUseCase.execute(id);
+            setUnidades(prev => prev.filter(u => u.id !== id));
+            toast({
+                title: "Sucesso",
+                description: "Unidade removida com sucesso.",
+            });
+        } catch (error) {
+            console.error('Error deleting unidade:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível remover a unidade.",
+                variant: "destructive",
+            });
+        }
+    };
 
     const updateUnidade = async (id: string, unidade: Partial<Unidade>) => {
         try {
-            await DIContainer.updateUnidadeUseCase.execute(id, unidade);
+            const updated = await updateUnidadeUseCase.execute(id, unidade);
+            setUnidades(prev => prev.map(u => u.id === id ? updated : u));
             toast({
                 title: "Sucesso",
                 description: "Unidade atualizada com sucesso.",
             });
-            loadUnidades(); // Refresh list
+            return updated;
         } catch (error) {
             console.error('Error updating unidade:', error);
             toast({
@@ -90,7 +99,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
 
     const suggestUnidades = async (disciplina: Disciplina) => {
         try {
-            return await DIContainer.suggestUnidadesUseCase.execute(disciplina);
+            return await suggestUnidadesUseCase.execute(disciplina);
         } catch (error) {
             console.error('Error suggesting unidades:', error);
             toast({
