@@ -1,15 +1,16 @@
 
 import { useState } from 'react';
-import { DIContainer } from '../di/container';
 import { Disciplina } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { DisciplinaSchema } from '../model/schemas';
+import { useDI } from '../di/useDI';
 
 interface UseDisciplinaFormViewModelProps {
     onSuccess?: () => void;
 }
 
 export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewModelProps = {}) => {
+    const { createDisciplinaUseCase, updateDisciplinaUseCase, suggestUnidadesUseCase } = useDI();
     const [loading, setLoading] = useState(false);
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const { toast } = useToast();
@@ -53,7 +54,7 @@ export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewM
                 return;
             }
 
-            await DIContainer.createDisciplinaUseCase.execute(disciplinaCompleta);
+            await createDisciplinaUseCase.execute(disciplinaCompleta);
             toast({
                 title: "Sucesso",
                 description: "Disciplina criada com sucesso.",
@@ -74,7 +75,7 @@ export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewM
     const updateDisciplina = async (id: string, disciplina: Partial<Disciplina>) => {
         setLoading(true);
         try {
-            await DIContainer.updateDisciplinaUseCase.execute(id, disciplina);
+            await updateDisciplinaUseCase.execute(id, disciplina);
             toast({
                 title: "Sucesso",
                 description: "Disciplina atualizada com sucesso.",
@@ -95,7 +96,7 @@ export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewM
     const getSuggestions = async (disciplina: Disciplina) => {
         // Stub implementation for now as the entity might not be fully formed or we just want suggestions based on what we have
         try {
-            const result = await DIContainer.suggestUnidadesUseCase.execute(disciplina);
+            const result = await suggestUnidadesUseCase.execute(disciplina);
             setSuggestions(result);
         } catch (error) {
             console.error("Error getting suggestions", error);

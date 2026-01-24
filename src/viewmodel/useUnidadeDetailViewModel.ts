@@ -1,12 +1,22 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { DIContainer } from '../di/container';
 import { Unidade, SlideContent } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { useUserId } from '../hooks/useUserId';
+import { useDI } from '../di/useDI';
 
 
 export const useUnidadeDetailViewModel = (unidadeId: string) => {
+    const {
+        getUnidadeByIdUseCase,
+        generatePlanoAulaUseCase,
+        generateAtividadeUseCase,
+        generateSlidesUseCase,
+        logMaterialGenerationUseCase,
+        updatePlanoAulaUseCase,
+        updateAtividadeUseCase,
+        updateSlidesUseCase
+    } = useDI();
+
     const [unidade, setUnidade] = useState<Unidade | null>(null);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState<string | null>(null); // 'plano', 'atividade', 'slides'
@@ -18,7 +28,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidadeId) return;
         setLoading(true);
         try {
-            const data = await DIContainer.getUnidadeByIdUseCase.execute(unidadeId);
+            const data = await getUnidadeByIdUseCase.execute(unidadeId);
             setUnidade(data);
         } catch (error) {
             console.error('Error fetching unidade:', error);
@@ -36,9 +46,9 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('plano');
         try {
-            const result = await DIContainer.generatePlanoAulaUseCase.execute(unidade, userId);
+            const result = await generatePlanoAulaUseCase.execute(unidade, userId);
 
-            await DIContainer.logMaterialGenerationUseCase.execute({
+            await logMaterialGenerationUseCase.execute({
                 tipo: 'plano_aula',
                 titulo: `Plano de Aula: ${unidade.tema}`,
                 descricao: `Plano de aula gerado para a unidade ${unidade.tema}`,
@@ -68,9 +78,9 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('atividade');
         try {
-            const result = await DIContainer.generateAtividadeUseCase.execute(unidade, userId);
+            const result = await generateAtividadeUseCase.execute(unidade, userId);
 
-            await DIContainer.logMaterialGenerationUseCase.execute({
+            await logMaterialGenerationUseCase.execute({
                 tipo: 'atividade',
                 titulo: `Atividade: ${unidade.tema}`,
                 descricao: `Atividade avaliativa gerada para a unidade ${unidade.tema}`,
@@ -100,13 +110,13 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         if (!unidade) return;
         setGenerating('slides');
         try {
-            const result = await DIContainer.generateSlidesUseCase.execute(unidade);
+            const result = await generateSlidesUseCase.execute(unidade);
 
             // Result is now MaterialSlides entity
             setUnidade(prev => prev ? { ...prev, material_slides: result } : null);
             setSlides(result.conteudo);
 
-            await DIContainer.logMaterialGenerationUseCase.execute({
+            await logMaterialGenerationUseCase.execute({
                 tipo: 'slides',
                 titulo: `Slides: ${unidade.tema}`,
                 descricao: `Slides gerados para a unidade ${unidade.tema}`,
@@ -135,7 +145,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const archivePlanoAula = async () => {
         if (!unidade || !unidade.plano_aula) return;
         try {
-            await DIContainer.updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { arquivado: true });
+            await updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { arquivado: true });
             setUnidade(prev => prev ? { ...prev, plano_aula: undefined } : null);
             toast({
                 title: "Arquivado",
@@ -154,7 +164,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const archiveAtividade = async () => {
         if (!unidade || !unidade.atividade_avaliativa) return;
         try {
-            await DIContainer.updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { arquivado: true });
+            await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { arquivado: true });
             setUnidade(prev => prev ? { ...prev, atividade_avaliativa: undefined } : null);
             toast({
                 title: "Arquivado",
@@ -173,7 +183,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const archiveSlides = async () => {
         if (!unidade || !unidade.material_slides) return;
         try {
-            await DIContainer.updateSlidesUseCase.execute(unidade.material_slides.id, { arquivado: true });
+            await updateSlidesUseCase.execute(unidade.material_slides.id, { arquivado: true });
             setUnidade(prev => prev ? { ...prev, material_slides: undefined } : null);
             setSlides(null);
             toast({
@@ -202,6 +212,43 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     }, [unidade]);
 
+    const updatePlanoAula = async (conteudo: string) => {
+        if (!unidade || !unidade.plano_aula) return;
+        try {
+            await updatePlanoAulaUseCase.execute(unidade.plano_aula.id, { conteudo });
+            // Update local state is optional if we assume react-query or subsequent fetch, 
+            // but for instant feedback let's update local state
+            setUnidade(prev => prev && prev.plano_aula ? {
+                ...prev,
+                plano_aula: { ...prev.plano_aula, conteudo }
+            } : prev);
+        } catch (error) {
+            console.error('Error updating plano:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível salvar o plano.",
+                variant: "destructive",
+            });
+            throw error;
+        }
+    };
+
+    const updateAtividade = async (conteudo: string) => {
+        if (!unidade || !unidade.atividade_avaliativa) return;
+        try {
+            const parsed = JSON.parse(conteudo);
+            await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
+            setUnidade(prev => prev && prev.atividade_avaliativa ? {
+                ...prev,
+                atividade_avaliativa: { ...prev.atividade_avaliativa, questoes: parsed }
+            } : prev);
+        } catch (error) {
+            console.error('Error updating atividade:', error);
+            // If it's a JSON error, it will be caught here
+            throw error;
+        }
+    };
+
     return {
         unidade,
         loading,
@@ -213,6 +260,8 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         archivePlanoAula,
         archiveAtividade,
         archiveSlides,
-        slides
+        slides,
+        updatePlanoAula,
+        updateAtividade
     };
 };
