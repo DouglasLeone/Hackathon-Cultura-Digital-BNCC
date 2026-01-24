@@ -1,5 +1,5 @@
 export * from './BNCC';
-import { HabilidadeBNCC } from './BNCC';
+import { HabilidadeBNCC, NivelEnsino } from './BNCC';
 
 export interface Disciplina {
   id: string;
@@ -138,7 +138,7 @@ export interface HistoricoGeracao {
   unidade?: { tema: string }; // Joined
 }
 
-export type NivelEnsino = 'Ensino Fundamental' | 'Ensino Médio';
+
 
 export interface UserContext {
   id: string; // user_id (local or auth)

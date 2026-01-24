@@ -24,16 +24,33 @@ export const useHistoricoViewModel = () => {
                 DIContainer.getAllUnidadesUseCase.execute()
             ]);
 
-            // Client-side join
-            return historicoData.map(h => ({
-                ...h,
-                disciplina: disciplinasData.find(d => d.id === h.disciplina_id)
-                    ? { nome: disciplinasData.find(d => d.id === h.disciplina_id)!.nome }
-                    : undefined,
-                unidade: unidadesData.find(u => u.id === h.unidade_id)
-                    ? { tema: unidadesData.find(u => u.id === h.unidade_id)!.tema }
-                    : undefined
-            }));
+            // Fetch User Context
+            const userId = localStorage.getItem('user_id');
+            let userNiveis: string[] = [];
+            if (userId) {
+                const ctx = await DIContainer.getUserContextUseCase.execute(userId);
+                if (ctx) userNiveis = ctx.niveis_ensino;
+            }
+
+            // Client-side join and filtering
+            return historicoData
+                .map(h => {
+                    const disciplina = disciplinasData.find(d => d.id === h.disciplina_id);
+                    const unidade = unidadesData.find(u => u.id === h.unidade_id);
+                    return {
+                        ...h,
+                        disciplina: disciplina ? { nome: disciplina.nome, nivel: disciplina.nivel } : undefined,
+                        unidade: unidade ? { tema: unidade.tema } : undefined,
+                        _disciplinaFull: disciplina // Keep reference for filtering
+                    };
+                })
+                .filter(item => {
+                    // Context Filter: If user has levels set, only show items from those levels
+                    if (userNiveis.length > 0 && item._disciplinaFull) {
+                        return userNiveis.includes(item._disciplinaFull.nivel);
+                    }
+                    return true; // Show all if no context or no linked disciplina (orphan items)
+                });
         }
     });
 
