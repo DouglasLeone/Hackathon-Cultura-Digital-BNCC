@@ -14,22 +14,46 @@ export const useDisciplinaFormViewModel = ({ onSuccess }: UseDisciplinaFormViewM
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const { toast } = useToast();
 
-    const createDisciplina = async (disciplina: Omit<Disciplina, 'id' | 'created_at' | 'updated_at' | 'nivel'>) => {
+    const createDisciplina = async (input: Omit<Disciplina, 'id' | 'created_at' | 'updated_at' | 'nivel'>) => {
         setLoading(true);
         try {
+            // Derivar nível da série se possível, para satisfazer o schema e o backend
+            let nivel: 'Ensino Fundamental' | 'Ensino Médio' | undefined;
+
+            if (input.serie.includes('Ensino Médio')) {
+                nivel = 'Ensino Médio';
+            } else if (input.serie.includes('Ensino Fundamental')) {
+                nivel = 'Ensino Fundamental';
+            }
+
+            if (!nivel) {
+                toast({
+                    title: "Erro de Validação",
+                    description: "Não foi possível identificar o nível de ensino a partir da série selecionada.",
+                    variant: "destructive",
+                });
+                setLoading(false);
+                return;
+            }
+
+            const disciplinaCompleta = {
+                ...input,
+                nivel
+            };
+
             // Validate input com Zod
-            const validationResult = DisciplinaSchema.safeParse(disciplina);
+            const validationResult = DisciplinaSchema.safeParse(disciplinaCompleta);
             if (!validationResult.success) {
                 const firstError = validationResult.error.errors[0];
                 toast({
                     title: "Erro de Validação",
-                    description: firstError.message,
+                    description: `Campo ${firstError.path}: ${firstError.message}`,
                     variant: "destructive",
                 });
                 return;
             }
 
-            await DIContainer.createDisciplinaUseCase.execute(disciplina);
+            await DIContainer.createDisciplinaUseCase.execute(disciplinaCompleta);
             toast({
                 title: "Sucesso",
                 description: "Disciplina criada com sucesso.",
