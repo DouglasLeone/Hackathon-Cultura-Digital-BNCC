@@ -1,50 +1,75 @@
 
 import { useState, useEffect } from 'react';
-import { DIContainer } from '../di/container';
-import { NivelEnsino, UserContext, AREAS_CONHECIMENTO_FUNDAMENTAL, AREAS_CONHECIMENTO_MEDIO } from '../model/entities';
+import { useDI } from '../di/useDI';
+
+// Hardcoded areas for simplicity or fetch from domain constants
+const AREAS_FUNDAMENTAL = ['Linguagens', 'Matemática', 'Ciências da Natureza', 'Ciências Humanas', 'Ensino Religioso'];
+const AREAS_MEDIO = ['Linguagens e suas Tecnologias', 'Matemática e suas Tecnologias', 'Ciências da Natureza e suas Tecnologias', 'Ciências Humanas e Sociais Aplicadas'];
 
 export const useEnsinoViewModel = () => {
+    const { getUserContextUseCase, createUserContextUseCase, updateUserContextUseCase } = useDI();
+    const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
-    const [areas, setAreas] = useState<string[]>([]);
-
-    const getUserId = () => localStorage.getItem('user_id') || '';
 
     useEffect(() => {
-        const loadAreas = async () => {
-            setLoading(true);
-            try {
-                const userId = getUserId();
-                let userNiveis: NivelEnsino[] = [];
-
-                if (userId) {
-                    const ctx = await DIContainer.getUserContextUseCase.execute(userId);
+        const loadContext = async () => {
+            const userId = localStorage.getItem('user_id');
+            if (userId) {
+                try {
+                    const ctx = await getUserContextUseCase.execute(userId);
                     if (ctx) {
-                        userNiveis = ctx.niveis_ensino;
+                        setSelectedLevels(ctx.niveis_ensino);
                     }
+                } catch (error) {
+                    console.error('Error loading user context:', error);
                 }
-
-                // Aggregate areas based on selected levels
-                const availableAreas = new Set<string>();
-                if (userNiveis.includes('Ensino Fundamental')) {
-                    AREAS_CONHECIMENTO_FUNDAMENTAL.forEach(a => availableAreas.add(a));
-                }
-                if (userNiveis.includes('Ensino Médio')) {
-                    AREAS_CONHECIMENTO_MEDIO.forEach(a => availableAreas.add(a));
-                }
-
-                setAreas(Array.from(availableAreas));
-
-            } catch (error) {
-                console.error("Error loading areas:", error);
-            } finally {
-                setLoading(false);
             }
+            setLoading(false);
         };
-        loadAreas();
-    }, []);
+        loadContext();
+    }, [getUserContextUseCase]);
+
+    const toggleLevel = (level: string) => {
+        setSelectedLevels(prev =>
+            prev.includes(level)
+                ? prev.filter(l => l !== level)
+                : [...prev, level]
+        );
+    };
+
+    const savePreferences = async () => {
+        setLoading(true);
+        const userId = localStorage.getItem('user_id') || crypto.randomUUID();
+        localStorage.setItem('user_id', userId);
+
+        try {
+            const existing = await getUserContextUseCase.execute(userId);
+            if (existing) {
+                await updateUserContextUseCase.execute(userId, selectedLevels as any);
+            } else {
+                await createUserContextUseCase.execute(userId, selectedLevels as any);
+            }
+            return true;
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Calculate unique areas based on selection
+    const areas = Array.from(new Set([
+        ...(selectedLevels.includes('Ensino Fundamental') ? AREAS_FUNDAMENTAL : []),
+        ...(selectedLevels.includes('Ensino Médio') ? AREAS_MEDIO : [])
+    ])).sort();
 
     return {
+        selectedLevels,
         loading,
+        toggleLevel,
+        savePreferences,
+        hasSelection: selectedLevels.length > 0,
         areas
     };
 };

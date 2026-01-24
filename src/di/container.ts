@@ -29,6 +29,7 @@ import { FirestoreUserRepository } from '../infra/repositories/firestore/Firesto
 import { GetUserContextUseCase } from '../usecase/GetUserContextUseCase';
 import { CreateUserContextUseCase } from '../usecase/CreateUserContextUseCase';
 import { UpdateUserContextUseCase } from '../usecase/UpdateUserContextUseCase';
+import { GetHistoricoUseCase } from '../usecase/GetHistoricoUseCase';
 
 class DIContainer {
     private static _genIARepository = new FirestoreGenIARepository();
@@ -43,6 +44,7 @@ class DIContainer {
         this._disciplinaRepository,
         this._unidadeRepository
     );
+    private static _getHistoricoUseCase = new GetHistoricoUseCase(this._genIARepository);
     private static _logMaterialGenerationUseCase = new LogMaterialGenerationUseCase(this._genIARepository);
     private static _deleteHistoricoUseCase = new DeleteHistoricoUseCase(this._genIARepository);
     private static _getAllDisciplinasUseCase = new GetAllDisciplinasUseCase(this._disciplinaRepository);
@@ -88,6 +90,10 @@ class DIContainer {
 
     static get getHomeDataUseCase() {
         return this._getHomeDataUseCase;
+    }
+
+    static get getHistoricoUseCase() {
+        return this._getHistoricoUseCase;
     }
 
     static get getAllDisciplinasUseCase() {

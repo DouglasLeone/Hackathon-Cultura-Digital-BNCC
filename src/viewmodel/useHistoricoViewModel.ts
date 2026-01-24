@@ -1,10 +1,21 @@
+
 import { useState, useMemo } from 'react';
-import { DIContainer } from '../di/container';
 import { HistoricoGeracao } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDI } from '../di/useDI';
 
 export const useHistoricoViewModel = () => {
+    const {
+        getHistoricoUseCase,
+        getAllDisciplinasUseCase,
+        getAllUnidadesUseCase,
+        getUserContextUseCase,
+        deleteHistoricoUseCase,
+        updatePlanoAulaUseCase,
+        updateAtividadeUseCase,
+        getUnidadeByIdUseCase
+    } = useDI();
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -19,16 +30,16 @@ export const useHistoricoViewModel = () => {
         queryKey: ['historico'],
         queryFn: async () => {
             const [historicoData, disciplinasData, unidadesData] = await Promise.all([
-                DIContainer.genIARepository.getHistorico(),
-                DIContainer.getAllDisciplinasUseCase.execute(),
-                DIContainer.getAllUnidadesUseCase.execute()
+                getHistoricoUseCase.execute(),
+                getAllDisciplinasUseCase.execute(),
+                getAllUnidadesUseCase.execute()
             ]);
 
             // Fetch User Context
             const userId = localStorage.getItem('user_id');
             let userNiveis: string[] = [];
             if (userId) {
-                const ctx = await DIContainer.getUserContextUseCase.execute(userId);
+                const ctx = await getUserContextUseCase.execute(userId);
                 if (ctx) userNiveis = ctx.niveis_ensino;
             }
 
@@ -56,14 +67,14 @@ export const useHistoricoViewModel = () => {
 
     const { data: disciplinas = [], isLoading: loadingDisciplinas } = useQuery({
         queryKey: ['disciplinas'],
-        queryFn: () => DIContainer.getAllDisciplinasUseCase.execute()
+        queryFn: () => getAllDisciplinasUseCase.execute()
     });
 
     const loading = loadingHistorico || loadingDisciplinas;
 
     // Delete Mutation
     const deleteMutation = useMutation({
-        mutationFn: (id: string) => DIContainer.deleteHistoricoUseCase.execute(id),
+        mutationFn: (id: string) => deleteHistoricoUseCase.execute(id),
         onSuccess: (_, id) => {
             queryClient.setQueryData(['historico'], (old: { id: string }[]) => old.filter((item) => item.id !== id));
             toast({
@@ -87,12 +98,12 @@ export const useHistoricoViewModel = () => {
     const archiveMutation = useMutation({
         mutationFn: async (item: { id: string, tipo: string, arquivado?: boolean, referencia_id?: string }) => {
             const novoEstado = !item.arquivado;
-            const targetId = item.referencia_id || item.id; // Fallback to id if referencia_id missing (shouldn't happen for these types)
+            const targetId = item.referencia_id || item.id;
 
             if (item.tipo === 'plano_aula') {
-                return DIContainer.updatePlanoAulaUseCase.execute(targetId, { arquivado: novoEstado });
+                return updatePlanoAulaUseCase.execute(targetId, { arquivado: novoEstado });
             } else if (item.tipo === 'atividade') {
-                return DIContainer.updateAtividadeUseCase.execute(targetId, { arquivado: novoEstado });
+                return updateAtividadeUseCase.execute(targetId, { arquivado: novoEstado });
             }
             throw new Error("Tipo não suportado para arquivamento");
         },
@@ -105,6 +116,15 @@ export const useHistoricoViewModel = () => {
 
     const toggleArchive = (item: HistoricoGeracao) => archiveMutation.mutate(item);
 
+    const getFullUnidade = async (unidadeId: string) => {
+        try {
+            return await getUnidadeByIdUseCase.execute(unidadeId);
+        } catch (error) {
+            console.error("Error fetching unidade details", error);
+            return null;
+        }
+    };
+
     const filteredHistorico = useMemo(() => {
         return historico.filter(item => {
             const matchDisciplina = filterDisciplina === 'all' || item.disciplina_id === filterDisciplina;
@@ -114,8 +134,6 @@ export const useHistoricoViewModel = () => {
                 item.titulo.toLowerCase().includes(searchTerm) ||
                 (item.descricao && item.descricao.toLowerCase().includes(searchTerm));
 
-            // Arquivado logic: if filterArquivado is true, return only archived items.
-            // If false, return only active items (undefined or false).
             const isArchived = !!item.arquivado;
             const matchArquivado = filterArquivado ? isArchived : !isArchived;
 
@@ -149,6 +167,7 @@ export const useHistoricoViewModel = () => {
         stats,
         deleteHistorico,
         toggleArchive,
+        getFullUnidade,
         refresh: () => queryClient.invalidateQueries({ queryKey: ['historico'] })
     };
 };

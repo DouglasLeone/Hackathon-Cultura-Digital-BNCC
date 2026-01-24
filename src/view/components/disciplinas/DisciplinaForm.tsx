@@ -22,7 +22,7 @@ import {
 import { SERIES_OPTIONS, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '@/model/entities';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { DIContainer } from '@/di/container';
+import { useDI } from '@/di/useDI';
 
 const formSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -40,6 +40,7 @@ interface DisciplinaFormProps {
 }
 
 export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: DisciplinaFormProps) {
+  const { getUserContextUseCase } = useDI();
   const [seriesOptions, setSeriesOptions] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: Disciplin
       return;
     }
 
-    DIContainer.getUserContextUseCase.execute(userId).then(ctx => {
+    getUserContextUseCase.execute(userId).then(ctx => {
       if (ctx && ctx.niveis_ensino) {
         let options: string[] = [];
         if (ctx.niveis_ensino.includes('Ensino Fundamental')) {
@@ -67,7 +68,7 @@ export function DisciplinaForm({ defaultValues, onSubmit, isLoading }: Disciplin
       console.error("Failed to load user context for series filtering", err);
       setSeriesOptions(SERIES_OPTIONS);
     });
-  }, []);
+  }, [getUserContextUseCase]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
