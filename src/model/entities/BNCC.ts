@@ -5,6 +5,6 @@ export interface HabilidadeBNCC {
     nivel: NivelEnsino;
     area: string;
     componente: string;
-    serie: string;
+    serie: string[];
     descricao: string;
 }

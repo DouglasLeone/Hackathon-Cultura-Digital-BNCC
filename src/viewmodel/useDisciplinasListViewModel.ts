@@ -15,12 +15,24 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
             // First fetch by Area (if provided) or all
             let data = await DIContainer.getAllDisciplinasUseCase.execute(areaFilter);
 
+            // Fetch User Context for Nivel filtering
+            const userId = localStorage.getItem('user_id');
+            if (userId) {
+                const ctx = await DIContainer.getUserContextUseCase.execute(userId);
+                if (ctx && ctx.niveis_ensino && ctx.niveis_ensino.length > 0) {
+                    // Filter Disciplinas: Only show those matching the user (Ensino Fundamental/Médio)
+                    // Note: Disciplina 'nivel' field must match one of the user's selected levels
+                    data = data.filter(d => ctx.niveis_ensino.includes(d.nivel as any));
+                }
+            }
+
             // Filter by Serie
             if (serieFilter && serieFilter !== 'all') {
                 data = data.filter(d => d.serie === serieFilter);
             }
 
-            // Filter by Nivel
+            // Filter by Nivel (Local Filter from Dropdown)
+            // This applies ON TOP of the context filter 
             if (nivelFilter && nivelFilter !== 'all') {
                 if (nivelFilter === 'Ensino Fundamental') {
                     data = data.filter(d => SERIES_FUNDAMENTAL.some(s => s === d.serie));
