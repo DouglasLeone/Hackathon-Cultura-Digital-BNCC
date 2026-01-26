@@ -30,6 +30,7 @@ import { GetUserContextUseCase } from '../usecase/GetUserContextUseCase';
 import { CreateUserContextUseCase } from '../usecase/CreateUserContextUseCase';
 import { UpdateUserContextUseCase } from '../usecase/UpdateUserContextUseCase';
 import { GetHistoricoUseCase } from '../usecase/GetHistoricoUseCase';
+import { EnrichThemeUseCase } from '../usecase/EnrichThemeUseCase';
 
 class DIContainer {
     private static _genIARepository = new FirestoreGenIARepository();
@@ -60,7 +61,8 @@ class DIContainer {
     private static _createUnidadeUseCase = new CreateUnidadeUseCase(this._unidadeRepository);
     private static _updateUnidadeUseCase = new UpdateUnidadeUseCase(this._unidadeRepository);
     private static _deleteUnidadeUseCase = new DeleteUnidadeUseCase(this._unidadeRepository);
-    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
+    private static _enrichThemeUseCase = new EnrichThemeUseCase();
+    private static _generatePlanoAulaUseCase = new GeneratePlanoAulaUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository, this._enrichThemeUseCase);
     private static _generateAtividadeUseCase = new GenerateAtividadeUseCase(this._unidadeRepository, this._aiService, this._userRepository, this._bnccRepository);
     private static _generateSlidesUseCase = new GenerateSlidesUseCase(this._aiService, this._bnccRepository, this._unidadeRepository);
     private static _updatePlanoAulaUseCase = new UpdatePlanoAulaUseCase(this._unidadeRepository, this._genIARepository);

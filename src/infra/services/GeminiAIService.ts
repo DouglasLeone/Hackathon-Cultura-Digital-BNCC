@@ -4,10 +4,10 @@ import { IAIService } from "../../model/services/IAIService";
 import { Disciplina, Unidade, UserContext, PlanoAula, AtividadeAvaliativa, HabilidadeBNCC, SlideContent } from "../../model/entities";
 
 const SYSTEM_PROMPT = `
-Você é um assistente pedagógico especialista na BNCC (Base Nacional Comum Curricular) do Brasil.
-Sua missão é auxiliar professores a criar conteúdos educacionais de alta qualidade, precisos e alinhados com as competências e habilidades da BNCC.
-Sempre retorne respostas estruturadas em JSON quando solicitado.
-Mantenha um tom profissional, encorajador e educativo.
+Você é o "Aula Criativa AI", um assistente pedagógico de elite especialista na BNCC (Base Nacional Comum Curricular) e no Complemento da Computação (Resolução CNE/CP nº 1/2022).
+Sua missão é transformar temas complexos em planos de aula brilhantes, práticos e inclusivos.
+Seu foco é integrar a CULTURA DIGITAL de forma orgânica em todas as disciplinas, preparando alunos para o século XXI.
+Sempre retorne respostas estruturadas em JSON. Mantenha um tom inspirador, técnico e extremamente organizado.
 `;
 
 export class GeminiAIService implements IAIService {
@@ -28,9 +28,9 @@ export class GeminiAIService implements IAIService {
         Contexto: Professor de ${disciplina.nome} para a série ${disciplina.serie} (${disciplina.nivel}).
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
-        Tarefa: Sugira 5 temas de unidades de ensino (apenas os títulos) que sejam adequados para esta disciplina e série, alinhados à BNCC.
+        Tarefa: Sugira 5 temas de unidades de ensino (apenas os títulos) que sejam adequados para esta disciplina e série, integrando conceitos de computação e cultura digital alinhados à BNCC.
         
-        Formato de Resposta: Um array JSON de strings. Exemplo: ["Tema 1", "Tema 2"]
+        Formato de Resposta: Um array JSON de strings.
         `;
 
         try {
@@ -47,35 +47,69 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<PlanoAula>> {
+    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext, enrichedContext?: string): Promise<Partial<PlanoAula>> {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
+        const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
         const prompt = `
-        Contexto: Planejamento de aula para a unidade "${unidade.tema}" da disciplina de ${unidade.disciplina?.nome || "Não especificada"}.
-        Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
+        Contexto: Planejamento de aula para a unidade "${unidade.tema}" para a disciplina de ${unidade.disciplina?.nome || "Geral"}.
+        Contexto Adicional: ${context ? JSON.stringify(context) : "Nenhum"}.
         
-        UTILIZE as habilidades da BNCC abaixo como referência principal:
+        ${enrichedContext ? `ENRIQUECIMENTO PEDAGÓGICO:\n${enrichedContext}\n` : ""}
+        
+        BASE LEGAL (UTILIZE ESTES CÓDIGOS):
         ${bnccContext}
         
-        INSTRUÇÕES DE ALINHAMENTO BNCC:
-        1. Se houver habilidades na lista que correspondam EXATAMENTE ao tema "${unidade.tema}", use-as.
-        2. Se o tema NÃO estiver explicitamente citado nas habilidades, escolha as habilidades da lista que sejam CONCEITUALMENTE MAIS PRÓXIMAS ou que sirvam de suporte para o tema.
-        3. JUSTIFIQUE no campo "conteudo" como o tema "${unidade.tema}" se conecta com os códigos BNCC escolhidos.
-        4. Se a lista de habilidades fornecida estiver vazia, gere um plano genérico, mas avise explicitamente que nenhuma habilidade BNCC foi encontrada no repositório local.
+        TAREFA: Gere um Plano de Aula PREMIUM com a seguinte estrutura no campo "conteudo" (Markdown):
 
-        
-        Tarefa: Crie um plano de aula detalhado seguindo a BNCC, citando os códigos das habilidades trabalhadas.
+        # PLANO DE AULA: [TÍTULO IMPACTANTE]
+
+        ## 1. IDENTIFICAÇÃO E OBJETIVOS
+        - **Tema Principal**: [Nome do tema detalhado]
+        - **Habilidades da BNCC**: [Citar códigos ${codigosBNCC} e descrições]
+        - **Eixos de Cultura Digital**: [Identificar: Cidadania Digital, Letramento Digital ou Tecnologia e Sociedade]
+        - **Objetivos Específicos**: [3-4 objetivos usando Verbos de Bloom (analisar, criar, etc)]
+
+        ## 2. COMPETÊNCIAS TRABALHADAS (BNCC)
+        - [Relacionar com as 10 Competências Gerais da BNCC de forma justificada]
+
+        ## 3. DURAÇÃO E RECURSOS
+        - **Tempo Estimado**: [Ex: 2 aulas de 50min]
+        - **Recursos Digitais**: [Ferramentas, sites, apps]
+        - **ALTERNATIVA OFFLINE (DESPLUGADA)**: [Como dar essa mesma aula SEM internet ou computadores, usando materiais físicos ou dinâmicas]
+
+        ## 4. DESENVOLVIMENTO (PASSO A PASSO)
+        - **ENGANJAMENTO (15% do tempo)**: [Atividade provocadora]
+        - **EXPLORAÇÃO/CONTEÚDO (50% do tempo)**: [Atividade principal detalhada]
+        - **SÍNTESE/FECHAMENTO (15% do tempo)**: [Reflexão final]
+
+        ## 5. ATIVIDADES PRÁTICAS
+        - [Descrever pelo menos 1 atividade hands-on que conecte o conteúdo com a Cultura Digital]
+
+        ## 6. AVALIAÇÃO E ACOMPANHAMENTO
+        ### Rubricas de Desempenho:
+        - **Excelente**: [Critérios para domínio total]
+        - **Adequado**: [Critérios para aprendizado satisfatório]
+        - **Em Desenvolvimento**: [Critérios para quem ainda precisa de apoio]
+        - **Insuficiente**: [Critérios para quem não atingiu os objetivos]
+
+        ---
+
+        INSTRUÇÕES DE QUALIDADE:
+        1. Contextualize para a realidade brasileira.
+        2. Garanta que a seção "Alternativa Offline" seja realmente criativa e viável.
+        3. No campo "conteudo", use formatação Markdown rica (negrito, listas, tabelas se necessário).
         
         Formato de Resposta (JSON):
         {
-            "titulo": "Título da Aula",
-            "duracao": "Estimativa de tempo (ex: 50 minutos)",
+            "titulo": "Título Curto",
+            "duracao": "Tempo total",
             "objetivos": ["Objetivo 1", "Objetivo 2"],
-            "conteudo_programatico": "Descrição dos tópicos abordados",
-            "metodologia": "Estratégias de ensino",
+            "conteudo_programatico": "Resumo dos tópicos",
+            "metodologia": "Resumo da estratégia",
             "recursos_didaticos": ["Recurso 1", "Recurso 2"],
-            "avaliacao": "Método de avaliação",
-            "conteudo": "Texto completo do plano de aula em Markdown para leitura do professor. Mencione as habilidades ${habilidadesBNCC.map(h => h.codigo).join(", ")} no texto."
+            "avaliacao": "Breve descrição do método",
+            "conteudo": "TEXTO MARKDOWN COMPLETO SEGUINDO A ESTRUTURA ACIMA"
         }
         `;
 
