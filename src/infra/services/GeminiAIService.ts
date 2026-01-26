@@ -47,25 +47,55 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<PlanoAula>> {
+    async generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext, enrichedContext?: string): Promise<Partial<PlanoAula>> {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
 
         const prompt = `
         Contexto: Planejamento de aula para a unidade "${unidade.tema}" da disciplina de ${unidade.disciplina?.nome || "Não especificada"}.
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
+        ${enrichedContext ? `ENRIQUECIMENTO CONTEXTUAL:\n${enrichedContext}\n` : ""}
+        
         UTILIZE as habilidades da BNCC abaixo como referência principal:
         ${bnccContext}
         
+        INSTRUÇÕES DETALHADAS:
+        1. OBJETIVOS DE APRENDIZAGEM:
+           - Seja específico e mensurável (use verbos de Bloom: analisar, criar, avaliar)
+           - Máximo 3-4 objetivos
+           - Conecte com habilidades BNCC citadas
+
+        2. METODOLOGIA:
+           - Descreva COMO ensinar (não só O QUE ensinar)
+           - Inclua etapas: Introdução (10min) → Desenvolvimento (25min) → Fechamento (15min)
+           - Sugira perguntas provocativas para engajar alunos
+
+        3. RECURSOS DIDÁTICOS:
+           - Seja específico (não só "slides", mas "slides com infográficos sobre...")
+           - Priorize recursos acessíveis (evite depender de equipamentos caros)
+           - Sugira alternativas (ex: "ou figuras impressas se não houver projetor")
+
+        4. ATIVIDADES PRÁTICAS:
+           - Inclua pelo menos 1 atividade hands-on
+           - Tempo estimado para cada atividade
+           - Exemplo real contextualizado ao Brasil
+
+        5. AVALIAÇÃO:
+           - Critérios claros e objetivos
+           - Rubricas de avaliação se possível
+           - Avaliação formativa (durante aula) + somativa (final)
+
         INSTRUÇÕES DE ALINHAMENTO BNCC:
         1. Se houver habilidades na lista que correspondam EXATAMENTE ao tema "${unidade.tema}", use-as.
         2. Se o tema NÃO estiver explicitamente citado nas habilidades, escolha as habilidades da lista que sejam CONCEITUALMENTE MAIS PRÓXIMAS ou que sirvam de suporte para o tema.
         3. JUSTIFIQUE no campo "conteudo" como o tema "${unidade.tema}" se conecta com os códigos BNCC escolhidos.
-        4. Se a lista de habilidades fornecida estiver vazia, gere um plano genérico, mas avise explicitamente que nenhuma habilidade BNCC foi encontrada no repositório local.
+        
+        EVITE:
+        - Conteúdo copiado de livros didáticos genéricos
+        - Jargões pedagógicos sem explicação
+        - Listas longas sem detalhamento
+        - Exemplos internacionais descontextualizados
 
-        
-        Tarefa: Crie um plano de aula detalhado seguindo a BNCC, citando os códigos das habilidades trabalhadas.
-        
         Formato de Resposta (JSON):
         {
             "titulo": "Título da Aula",

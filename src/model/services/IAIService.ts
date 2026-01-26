@@ -2,7 +2,7 @@ import { Disciplina, Unidade, UserContext, HabilidadeBNCC, SlideContent } from '
 
 export interface IAIService {
     suggestUnidades(disciplina: Disciplina, context?: UserContext): Promise<string[]>;
-    generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<import('../entities').PlanoAula>>;
+    generatePlanoAula(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext, enrichedContext?: string): Promise<Partial<import('../entities').PlanoAula>>;
     generateAtividade(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<import('../entities').AtividadeAvaliativa>>;
     generateSlides(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<SlideContent[]>;
 }
