@@ -1,0 +1,217 @@
+# PLANO DE AULA: ÉTICA DIGITAL NO SÉCULO XXI
+
+## 1. TEMA E OBJETIVOS
+
+### Tema Principal
+**Ética Digital: Dilemas Morais no Mundo Virtual e suas Implicações na Sociedade Contemporânea**
+
+### Objetivos de Aprendizagem
+**Habilidades da BNCC:**
+- **EM13CHS101** - Identificar, analisar e comparar diferentes fontes e narrativas expressas em diversas linguagens sobre dilemas éticos contemporâneos
+- **EM13CHS104** - Analisar objetos e vestígios da cultura digital para identificar valores, crenças e práticas éticas na sociedade contemporânea
+
+**Objetivos Específicos:**
+- Compreender os fundamentos filosóficos da ética aplicados ao ambiente digital
+- Analisar criticamente situações de conflito ético no mundo virtual
+- Desenvolver argumentos filosóficos sobre responsabilidade moral no ciberespaço
+- Refletir sobre as consequências éticas de nossas ações digitais
+
+### Habilidades de Cultura Digital Trabalhadas
+**Eixo Principal:** CIDADANIA DIGITAL
+**Eixos Complementares:** LETRAMENTO DIGITAL e TECNOLOGIA E SOCIEDADE
+
+## 2. COMPETÊNCIAS TRABALHADAS
+
+### Competências Gerais da BNCC Desenvolvidas:
+- **Competência 1** - Valorizar conhecimentos sobre o mundo digital para compreender a realidade ética contemporânea
+- **Competência 5** - Utilizar tecnologias digitais de forma crítica, reflexiva e ética
+- **Competência 7** - Argumentar com base em dados confiáveis sobre questões éticas digitais
+- **Competência 9** - Exercitar o diálogo e respeito no ambiente digital
+- **Competência 10** - Agir com autonomia e responsabilidade, tomando decisões éticas no mundo digital
+
+### Relação com Habilidades Específicas:
+As habilidades EM13CHS101 e EM13CHS104 conectam-se diretamente com a análise crítica de fontes digitais e identificação de valores éticos na cultura digital contemporânea.
+
+## 3. DURAÇÃO E RECURSOS
+
+### Tempo Estimado: 
+2 aulas de 50 minutos (100 minutos total)
+
+### Materiais Necessários:
+**Recursos Básicos:**
+- Quadro/lousa
+- Papel sulfite
+- Canetas/lápis
+- Cartolinas para cartazes
+
+**Recursos Digitais (quando disponíveis):**
+- Computador/tablet com acesso à internet
+- Projetor ou TV
+- Smartphones dos estudantes
+
+### Recursos Digitais Sugeridos:
+**Com Internet:**
+- Plataforma Kahoot para quiz interativo
+- Vídeos do YouTube sobre ética digital
+- Simulador de situações éticas online
+
+**Alternativas Offline:**
+- Cards impressos com situações éticas
+- Textos filosóficos em papel
+- Quiz em formato físico
+
+## 4. DESENVOLVIMENTO
+
+### MOMENTO INICIAL (20 minutos) - Engajamento
+
+**Atividade Provocadora: "O Dilema Digital"**
+
+**Com tecnologia:**
+Apresentar situações reais através de slides ou vídeos curtos:
+- Caso do vazamento de dados pessoais
+- Situação de cyberbullying
+- Dilema sobre pirataria digital
+
+**Sem tecnologia:**
+Dramatização em grupo de situações éticas digitais usando cards preparados pelo professor.
+
+**Questões Norteadoras:**
+1. "Existe diferença entre mentir pessoalmente e mentir nas redes sociais?"
+2. "Por que algumas pessoas agem diferente online do que pessoalmente?"
+3. "Quais filósofos poderiam nos ajudar a entender esses dilemas?"
+
+### DESENVOLVIMENTO (60 minutos) - Atividades Principais
+
+#### Fase 1: Fundamentação Filosófica (20 minutos)
+
+**Texto Base:** Adaptação dos conceitos de:
+- **Kant** - Imperativo categórico aplicado ao mundo digital
+- **Aristóteles** - Virtudes éticas no ambiente virtual
+- **John Stuart Mill** - Utilitarismo e consequências digitais
+
+**Atividade:** Análise comparativa de como cada filósofo abordaria um caso de fake news.
+
+#### Fase 2: Laboratório de Ética Digital (25 minutos)
+
+**Atividade Prática 1: "Tribunal Ético Digital"**
+
+**Com tecnologia:**
+- Grupos pesquisam casos reais de dilemas éticos digitais
+- Criam apresentações digitais defendendo diferentes perspectivas filosóficas
+- Usam ferramentas colaborativas online
+
+**Sem tecnologia:**
+- Cada grupo recebe um caso impresso
+- Prepara argumentos usando as teorias filosóficas estudadas
+- Apresenta oralmente suas conclusões
+
+**Casos Sugeridos:**
+1. Direito ao esquecimento vs. liberdade de informação
+2. Privacidade vs. segurança nacional
+3. Algoritmos e discriminação
+4. Responsabilidade das plataformas digitais
+
+#### Fase 3: Construção Colaborativa (15 minutos)
+
+**Atividade Prática 2: "Código de Ética Digital da Turma"**
+
+**Metodologia:**
+- Grupos elaboram artigos para um código de ética digital
+- Cada artigo baseado em uma corrente filosófica
+- Discussão e votação dos artigos finais
+
+### FECHAMENTO (20 minutos) - Síntese e Avaliação
+
+**Síntese Reflexiva:**
+1. **Conexão com EM13CHS101:** Como diferentes narrativas sobre ética digital revelam valores sociais distintos?
+2. **Conexão com EM13CHS104:** Que elementos da cultura digital contemporânea refletem nossos valores éticos?
+
+**Avaliação Formativa:**
+- Quiz rápido sobre conceitos-chave
+- Autoavaliação da participação
+- Feedback peer-to-peer sobre argumentações
+
+## 5. ATIVIDADES PRÁTICAS
+
+### Atividade 1: "Dilemas Éticos em Rede"
+**Objetivo:** Aplicar teorias filosóficas a situações digitais contemporâneas
+**Conexão BNCC:** Desenvolve EM13CHS101 através da análise de diferentes perspectivas éticas
+**Metodologia:** 
+- Apresentação de casos reais
+- Análise sob diferentes correntes filosóficas
+- Debate estruturado com argumentação
+
+### Atividade 2: "Mapeamento Ético Digital"
+**Objetivo:** Identificar valores éticos presentes na cultura digital
+**Conexão BNCC:** Trabalha EM13CHS104 através da análise da cultura digital
+**Metodologia:**
+- Análise de plataformas digitais populares
+- Identificação de valores implícitos
+- Criação de mapa conceitual ético
+
+### Adaptações para Diferentes Contextos:
+
+**Escolas com poucos recursos:**
+- Uso de recortes de jornal sobre casos éticos digitais
+- Debates orais estruturados
+- Criação de cartazes colaborativos
+
+**Escolas bem equipadas:**
+- Pesquisa online orientada
+- Criação de podcasts sobre ética digital
+- Simulações interativas
+
+## 6. AVALIAÇÃO
+
+### Critérios de Avaliação Baseados na BNCC:
+
+**Para EM13CHS101:**
+- **Excelente:** Identifica, analisa e compara múltiplas perspectivas éticas sobre situações digitais com argumentação consistente
+- **Adequado:** Identifica diferentes perspectivas éticas e faz comparações básicas
+- **Em desenvolvimento:** Reconhece diferentes perspectivas mas tem dificuldade em analisá-las
+- **Insuficiente:** Não consegue identificar diferentes perspectivas éticas
+
+**Para EM13CHS104:**
+- **Excelente:** Analisa elementos da cultura digital identificando valores éticos subjacentes e suas implicações sociais
+- **Adequado:** Identifica valores éticos na cultura digital com análise básica
+- **Em desenvolvimento:** Reconhece alguns elementos éticos na cultura digital
+- **Insuficiente:** Não consegue identificar valores éticos na cultura digital
+
+### Instrumentos de Avaliação:
+
+1. **Participação em Debates** (30%)
+   - Qualidade da argumentação filosófica
+   - Uso adequado de conceitos éticos
+   - Respeito às diferentes perspectivas
+
+2. **Atividades Práticas** (40%)
+   - Código de Ética Digital criado
+   - Análise de casos éticos
+   - Criatividade e aplicação dos conceitos
+
+3. **Reflexão Individual** (30%)
+   - Texto reflexivo sobre mudanças na percepção pessoal sobre ética digital
+   - Conexão entre teoria filosófica e prática digital
+   - Propostas de ação ética pessoal
+
+### Formas de Acompanhamento:
+
+**Durante a Aula:**
+- Observação da participação nos debates
+- Verificação da compreensão através de perguntas direcionadas
+- Feedback imediato sobre argumentações
+
+**Após a Aula:**
+- Análise dos produtos criados (códigos, mapas, apresentações)
+- Acompanhamento das reflexões individuais
+- Verificação da aplicação dos conceitos em situações novas
+
+### Recuperação Paralela:
+Para estudantes com dificuldades, propor:
+- Estudo dirigido com textos filosóficos simplificados
+- Tutoria entre pares
+- Atividades práticas adicionais com situações do cotidiano digital dos jovens
+
+---
+
+**Observação Final:** Este plano de aula integra de forma transversal a Cultura Digital à Filosofia, respeitando as diretrizes da BNCC e considerando a realidade diversa das escolas brasileiras. As atividades podem ser adaptadas conforme os recursos disponíveis, mantendo sempre o foco no desenvolvimento do pensamento crítico e ético dos estudantes.
