@@ -24,10 +24,12 @@ import { GetUserContextUseCase } from '../usecase/GetUserContextUseCase';
 import { CreateUserContextUseCase } from '../usecase/CreateUserContextUseCase';
 import { UpdateUserContextUseCase } from '../usecase/UpdateUserContextUseCase';
 import { GetHistoricoUseCase } from '../usecase/GetHistoricoUseCase';
+import { ValidatePedagogicalQualityUseCase } from '../usecase/ValidatePedagogicalQualityUseCase';
 
 export interface IContainer {
     getHomeDataUseCase: GetHomeDataUseCase;
     getHistoricoUseCase: GetHistoricoUseCase;
+    validatePedagogicalQualityUseCase: ValidatePedagogicalQualityUseCase;
     logMaterialGenerationUseCase: LogMaterialGenerationUseCase;
     deleteHistoricoUseCase: DeleteHistoricoUseCase;
     getAllDisciplinasUseCase: GetAllDisciplinasUseCase;

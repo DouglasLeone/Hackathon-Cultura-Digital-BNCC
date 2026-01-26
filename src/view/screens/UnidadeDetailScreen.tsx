@@ -29,6 +29,8 @@ import {
     BreadcrumbSeparator,
 } from "@/view/components/ui/breadcrumb";
 import { Questao } from '@/model/entities';
+import { QualityBadge } from '@/view/components/ui/quality-badge';
+import { QualityIssue } from '@/usecase/ValidatePedagogicalQualityUseCase';
 
 const formatActivityContent = (questions: Questao[]): string => {
     if (!questions || !Array.isArray(questions)) return '';
@@ -246,6 +248,15 @@ const UnidadeDetailScreen = () => {
                                         </DialogContent>
                                     </Dialog>
                                     <Badge variant="outline" className="mt-2 w-full justify-center">Gerado em: {new Date(unidade.plano_aula.created_at).toLocaleDateString()}</Badge>
+
+                                    {unidade.plano_aula.quality_score !== undefined && (
+                                        <div className="flex justify-center mt-2">
+                                            <QualityBadge
+                                                score={unidade.plano_aula.quality_score}
+                                                issues={unidade.plano_aula.quality_issues as QualityIssue[] || []}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="pt-4">

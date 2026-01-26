@@ -95,6 +95,8 @@ export interface PlanoAula {
   conteudo?: string; // For the full markdown content
   habilidades_bncc_usadas?: string[]; // Added missing field
   habilidades_possiveis?: HabilidadeBNCC[];
+  quality_score?: number;
+  quality_issues?: any[];
   arquivado?: boolean; // New field for Soft Delete
   created_at: string;
   updated_at: string;

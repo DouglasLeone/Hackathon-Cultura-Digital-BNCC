@@ -4,6 +4,7 @@ import { IAIService } from '../model/services/IAIService';
 import { Unidade, HabilidadeBNCC } from '../model/entities';
 import { BNCCRepository } from '../infra/repositories/BNCCRepository';
 import { EnrichThemeUseCase } from './EnrichThemeUseCase';
+import { ValidatePedagogicalQualityUseCase } from './ValidatePedagogicalQualityUseCase';
 import { PlanoAulaSchema } from '../model/schemas';
 
 export class GeneratePlanoAulaUseCase {
@@ -12,7 +13,8 @@ export class GeneratePlanoAulaUseCase {
         private aiService: IAIService,
         private userRepository: IUserRepository,
         private bnccRepository: BNCCRepository,
-        private enrichThemeUseCase: EnrichThemeUseCase
+        private enrichThemeUseCase: EnrichThemeUseCase,
+        private validateQualityUseCase: ValidatePedagogicalQualityUseCase
     ) { }
 
     async execute(unidade: Unidade, userId?: string) {
@@ -21,7 +23,7 @@ export class GeneratePlanoAulaUseCase {
             context = await this.userRepository.getUserContext(userId) || undefined;
         }
 
-        let habilidadesBNCC: import('../model/entities').HabilidadeBNCC[] = [];
+        let habilidadesBNCC: HabilidadeBNCC[] = [];
         if (unidade.disciplina) {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }
@@ -30,12 +32,14 @@ export class GeneratePlanoAulaUseCase {
 
         const generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context, enrichedContext);
 
-        // Validate AI response
+        // Validate AI response structure
         const validationResult = PlanoAulaSchema.safeParse(generatedPlano);
         if (!validationResult.success) {
             console.warn('⚠️ AI response validation failed:', validationResult.error.errors);
-            // Prosseguir com defaults, mas logar para investigação
         }
+
+        // ✨ Perform Pedagogical Quality Check
+        const qualityReport = await this.validateQualityUseCase.execute(generatedPlano, habilidadesBNCC);
 
         // Ensure defaults for required fields if AI returns partial data
         const planoToSave = {
@@ -48,7 +52,9 @@ export class GeneratePlanoAulaUseCase {
             avaliacao: generatedPlano.avaliacao || '',
             conteudo: generatedPlano.conteudo || '',
             habilidades_bncc_usadas: generatedPlano.habilidades_bncc_usadas || [],
-            habilidades_possiveis: habilidadesBNCC, // Attach RAG results here for feedback
+            habilidades_possiveis: habilidadesBNCC,
+            quality_score: qualityReport.score,
+            quality_issues: qualityReport.issues,
             created_at: new Date().toISOString(),
             unidade_id: unidade.id
         };
