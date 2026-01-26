@@ -1,8 +1,9 @@
 import { IUnidadeRepository } from '../model/repositories/IUnidadeRepository';
 import { IUserRepository } from '../model/repositories/IUserRepository';
 import { IAIService } from '../model/services/IAIService';
-import { Unidade } from '../model/entities';
+import { Unidade, HabilidadeBNCC } from '../model/entities';
 import { BNCCRepository } from '../infra/repositories/BNCCRepository';
+import { EnrichThemeUseCase } from './EnrichThemeUseCase';
 import { PlanoAulaSchema } from '../model/schemas';
 
 export class GeneratePlanoAulaUseCase {
@@ -10,7 +11,8 @@ export class GeneratePlanoAulaUseCase {
         private repository: IUnidadeRepository,
         private aiService: IAIService,
         private userRepository: IUserRepository,
-        private bnccRepository: BNCCRepository
+        private bnccRepository: BNCCRepository,
+        private enrichThemeUseCase: EnrichThemeUseCase
     ) { }
 
     async execute(unidade: Unidade, userId?: string) {
@@ -24,7 +26,9 @@ export class GeneratePlanoAulaUseCase {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }
 
-        const generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context);
+        const enrichedContext = await this.enrichThemeUseCase.execute(unidade.tema, unidade.disciplina!, habilidadesBNCC);
+
+        const generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context, enrichedContext);
 
         // Validate AI response
         const validationResult = PlanoAulaSchema.safeParse(generatedPlano);
