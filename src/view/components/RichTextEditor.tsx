@@ -10,7 +10,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import {
     Bold, Italic, Strikethrough, Code, List, ListOrdered,
     Heading1, Heading2, Heading3, Quote, Undo, Redo,
-    Link as LinkIcon, Underline as UnderlineIcon, ListTodo, Type
+    Link as LinkIcon, Underline as UnderlineIcon, ListTodo, Type, Eye, EyeOff
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -31,6 +31,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     className,
     editable = true
 }) => {
+    const [isPreview, setIsPreview] = useState(false);
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -287,9 +289,28 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 </div>
             </div>
 
-            {/* Editor content */}
-            <div className="flex-1 overflow-y-auto min-h-[400px]">
-                <EditorContent editor={editor} className="tiptap-editor" />
+            {/* Editor content or Preview */}
+            <div className="flex-1 overflow-y-auto min-h-[400px] relative">
+                <div className="absolute top-2 right-2 z-10">
+                    <Button
+                        variant="ghost" size="sm"
+                        onClick={() => setIsPreview(!isPreview)}
+                        className={cn("gap-2 shadow-sm", isPreview ? "bg-indigo-100 text-indigo-700" : "bg-white/80 backdrop-blur")}
+                        title={isPreview ? "Voltar para edição" : "Visualizar como documento"}
+                    >
+                        {isPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {isPreview ? "Editar" : "Visualizar"}
+                    </Button>
+                </div>
+
+                {isPreview ? (
+                    <div
+                        className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none p-8 bg-white min-h-full"
+                        dangerouslySetInnerHTML={{ __html: editor.getHTML() }}
+                    />
+                ) : (
+                    <EditorContent editor={editor} className="tiptap-editor" />
+                )}
             </div>
         </div>
     );
