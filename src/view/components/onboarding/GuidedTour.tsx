@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTour } from './TourProvider';
 import { Button } from '@/view/components/ui/button';
@@ -22,7 +22,6 @@ export const GuidedTour: React.FC = () => {
         let arrowShift = 0;
 
         const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
 
         // Initial preferred position
         switch (step.position) {
@@ -66,68 +65,72 @@ export const GuidedTour: React.FC = () => {
         setTooltipCoords({ top, left, arrowShift });
     }, [isActive, targetRect, isReady, step]);
 
-    const getTooltipStyle = () => {
-        if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+    const getTooltipStyle = useCallback(() => {
+        if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
 
         const { top, left } = tooltipCoords;
-        if (!step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+        if (!step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
 
         switch (step.position) {
             case 'top':
-                return { top, left, transform: 'translate(-50%, -100%)' };
+                return { top, left, transform: 'translate(-50%, -100%)', side: 'top', arrowOffset: 0 };
             case 'bottom':
-                return { top, left, transform: 'translate(-50%, 0)' };
+                return { top, left, transform: 'translate(-50%, 0)', side: 'bottom', arrowOffset: 0 };
             case 'left':
-                return { top, left, transform: 'translate(-100%, -50%)' };
+                return { top, left, transform: 'translate(-100%, -50%)', side: 'left', arrowOffset: 0 };
             case 'right':
-                return { top: targetRect.top + targetRect.height / 2, left: Math.min(left, window.innerWidth - TOOLTIP_WIDTH - PADDING), transform: 'translate(0, -50%)' };
+                return { top: targetRect.top + targetRect.height / 2, left: Math.min(left, window.innerWidth - TOOLTIP_WIDTH - PADDING), transform: 'translate(0, -50%)', side: 'right', arrowOffset: 0 };
             default:
-                return {};
+                return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
         }
-    };
+    }, [targetRect, step, tooltipCoords]);
 
     // Refined right-side positioning specifically for elements near the right edge
     const finalStyle = useMemo(() => {
-        if (!isActive || !targetRect || !isReady || !step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+        if (!isActive || !targetRect || !isReady || !step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
 
         const viewportWidth = window.innerWidth;
         const pad = 16;
 
         if (step.position === 'right') {
-            let left = targetRect.right + PADDING;
+            const left = targetRect.right + PADDING;
             if (left + TOOLTIP_WIDTH > viewportWidth - pad) {
                 // Flip to left if no room on right
                 return {
                     top: targetRect.top + targetRect.height / 2,
                     left: targetRect.left - PADDING,
                     transform: 'translate(-100%, -50%)',
-                    side: 'left'
+                    side: 'left',
+                    arrowOffset: 0
                 };
             }
             return {
                 top: targetRect.top + targetRect.height / 2,
                 left: left,
                 transform: 'translate(0, -50%)',
-                side: 'right'
+                side: 'right',
+                arrowOffset: 0
             };
         }
 
         if (step.position === 'left') {
-            let left = targetRect.left - PADDING;
+            const left = targetRect.left - PADDING;
             if (left - TOOLTIP_WIDTH < pad) {
                 // Flip to right if no room on left
                 return {
                     top: targetRect.top + targetRect.height / 2,
                     left: targetRect.right + PADDING,
                     transform: 'translate(0, -50%)',
-                    side: 'right'
+                    side: 'right',
+                    arrowOffset: 0
                 };
             }
             return {
                 top: targetRect.top + targetRect.height / 2,
                 left: left,
                 transform: 'translate(-100%, -50%)',
-                side: 'left'
+                side: 'left',
+                arrowOffset: 0
             };
         }
 
@@ -156,7 +159,7 @@ export const GuidedTour: React.FC = () => {
         }
 
         return getTooltipStyle();
-    }, [isActive, targetRect, isReady, step, window.innerWidth]);
+    }, [isActive, targetRect, isReady, step, getTooltipStyle]);
 
     if (!isActive || !steps || steps.length === 0 || !step) return null;
 
