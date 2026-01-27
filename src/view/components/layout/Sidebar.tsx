@@ -59,7 +59,18 @@ export function Sidebar({ className, onClose }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border space-y-4">
+        <button
+          onClick={() => {
+            localStorage.removeItem('aula_criativa_onboarding_completed');
+            localStorage.removeItem('user_id');
+            window.location.reload();
+          }}
+          className="w-full py-2 px-4 text-xs font-medium text-sidebar-foreground/40 hover:text-sidebar-foreground/80 hover:bg-sidebar-accent transition-all rounded-lg flex items-center justify-center gap-2"
+        >
+          <History className="w-3 h-3" />
+          Resetar Tutorial
+        </button>
         <div className="text-xs text-sidebar-foreground/50 text-center">
           <p>Sistema de Planejamento</p>
           <p>Hackathon IFPI 2026</p>
