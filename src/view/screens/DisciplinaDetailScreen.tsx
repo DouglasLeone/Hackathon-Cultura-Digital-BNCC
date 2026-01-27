@@ -23,6 +23,8 @@ import { UnidadeForm } from '@/view/components/unidades/UnidadeForm';
 import { UnidadeCard } from '@/view/components/unidades/UnidadeCard';
 import { UnidadeCardSkeleton } from '@/view/components/unidades/UnidadeCardSkeleton';
 import { EmptyState } from '@/view/components/ui/empty-state';
+import { UnidadeCreationChoice } from '@/view/components/unidades/UnidadeCreationChoice';
+import { UnidadeAISelection } from '@/view/components/unidades/UnidadeAISelection';
 
 const DisciplinaDetailScreen = () => {
     const { id } = useParams<{ id: string }>();
@@ -34,11 +36,14 @@ const DisciplinaDetailScreen = () => {
         loading: loadingUnidades,
         createUnidade,
         deleteUnidade,
-        updateUnidade
+        updateUnidade,
+        suggestUnidades
     } = useUnidadesListViewModel(id || '');
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [creationStep, setCreationStep] = useState<'choice' | 'manual' | 'ai'>('choice');
     const [editingUnidade, setEditingUnidade] = useState<Unidade | null>(null);
+    const [aiSelectedTheme, setAiSelectedTheme] = useState('');
     const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     // Initial loading state for the whole page if main entity is missing
@@ -134,29 +139,63 @@ const DisciplinaDetailScreen = () => {
                             <p className="text-sm text-muted-foreground mt-1">Gerencie as unidades e tópicos desta disciplina</p>
                         </div>
 
-                        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                        <Dialog
+                            open={isCreateOpen}
+                            onOpenChange={(open) => {
+                                setIsCreateOpen(open);
+                                if (!open) setCreationStep('choice');
+                            }}
+                        >
                             <DialogTrigger asChild>
                                 <Button data-tour="tour-new-unidade" size="default" className="shadow-md hover:shadow-lg transition-all">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Nova Unidade
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px]">
+                            <DialogContent className="sm:max-w-[600px]">
                                 <DialogHeader>
-                                    <DialogTitle>Nova Unidade de Ensino</DialogTitle>
+                                    <DialogTitle>
+                                        {creationStep === 'choice' && "Nova Unidade de Ensino"}
+                                        {creationStep === 'manual' && "Criar Unidade Manualmente"}
+                                        {creationStep === 'ai' && "Criar Unidade com IA"}
+                                    </DialogTitle>
                                 </DialogHeader>
-                                <UnidadeForm
-                                    onSubmit={async (data) => {
-                                        if (data.tema) {
-                                            await createUnidade({
-                                                tema: data.tema,
-                                                contexto_cultura_digital: data.contexto_cultura_digital,
-                                                disciplina_id: disciplina.id
-                                            });
-                                            setIsCreateOpen(false);
-                                        }
-                                    }}
-                                />
+
+                                {creationStep === 'choice' && (
+                                    <UnidadeCreationChoice
+                                        onManual={() => setCreationStep('manual')}
+                                        onAI={() => setCreationStep('ai')}
+                                    />
+                                )}
+
+                                {creationStep === 'manual' && (
+                                    <UnidadeForm
+                                        defaultValues={{ tema: aiSelectedTheme }}
+                                        onSubmit={async (data) => {
+                                            if (data.tema) {
+                                                await createUnidade({
+                                                    tema: data.tema,
+                                                    contexto_cultura_digital: data.contexto_cultura_digital,
+                                                    disciplina_id: disciplina.id
+                                                });
+                                                setIsCreateOpen(false);
+                                                setCreationStep('choice');
+                                                setAiSelectedTheme('');
+                                            }
+                                        }}
+                                    />
+                                )}
+
+                                {creationStep === 'ai' && (
+                                    <UnidadeAISelection
+                                        onGenerate={() => suggestUnidades(disciplina)}
+                                        onSelect={(tema) => {
+                                            setAiSelectedTheme(tema);
+                                            setCreationStep('manual');
+                                        }}
+                                        onCancel={() => setCreationStep('choice')}
+                                    />
+                                )}
                             </DialogContent>
                         </Dialog>
                     </div>
