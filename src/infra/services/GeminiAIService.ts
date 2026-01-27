@@ -206,30 +206,45 @@ export class GeminiAIService implements IAIService {
         TAREFA: Gere o CONTEÚDO DETALHADO do Plano de Aula em formato MARKDOWN.
         NÃO retorne JSON. Retorne apenas o texto Markdown.
         
-        ESTRUTURA OBRIGATÓRIA:
-        # PLANO DE AULA: [TÍTULO]
+        ESTRUTURA OBRIGATÓRIA (Use Markdown):
+        # [TÍTULO]
 
-        ## 1. IDENTIFICAÇÃO E OBJETIVOS
-        - **Tema Principal**: [Tema]
-        - **Habilidades da BNCC**: [Citar códigos ${codigosBNCC}]
-        - **Eixos de Cultura Digital**: [Identificar: Cidadania Digital, Letramento Digital ou Tecnologia e Sociedade]
-        - **Objetivos**: [Lista de objetivos]
+        > **Visão Geral**: [Breve frase de impacto sobre a aula]
 
-        ## 2. DURAÇÃO E RECURSOS
-        - **Tempo**: [Duração]
-        - **Recursos**: [Digitais e Físicos]
-        - **ALTERNATIVA OFFLINE**: [Como dar essa aula sem internet]
+        ## 1. Identificação e Objetivos
+        > **Tema Principal**: [Tema]
+        > **Habilidades BNCC**: [Citar códigos ${codigosBNCC}]
+        > **Eixos**: [Cultura Digital / Letramento / Tecnologia]
 
-        ## 3. DESENVOLVIMENTO (PASSO A PASSO)
-        - **ENGAJAMENTO (15%)**: [Atividade inicial]
-        - **EXPLORAÇÃO (50%)**: [Conteúdo principal]
-        - **SÍNTESE (15%)**: [Fechamento]
+        **Objetivos de Aprendizagem**:
+        - [Objetivo 1]
+        - [Objetivo 2]
+        - [Objetivo 3]
 
-        ## 4. ATIVIDADES PRÁTICAS
-        - [Atividade hands-on detalhada]
+        ## 2. Preparação
+        > **Tempo Necessário**: [Duração]
+        > **Recursos**: [Listar recursos físicos e digitais]
+        
+        **Alternativa Offline**:
+        - [Como adaptar sem internet]
 
-        ## 5. AVALIAÇÃO
-        - [Rubricas e métodos]
+        ## 3. Desenvolvimento (Passo a Passo)
+        ### 1. Engajamento (15%)
+        [Como iniciar a aula, perguntas disparadoras]
+
+        ### 2. Exploração (50%)
+        [Conteúdo principal, explicação, exemplos]
+
+        > **Dica para o Professor**: [Sugestão pedagógica ou curiosidade]
+
+        ### 3. Síntese (15%)
+        [Como fechar a aula e verificar aprendizado]
+
+        ## 4. Atividade Prática
+        **Tarefa**: [Descrição da atividade]
+        
+        ## 5. Avaliação
+        - [Critérios de avaliação]
         `;
 
         try {
