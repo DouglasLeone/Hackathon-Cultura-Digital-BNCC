@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useDI } from '../di/useDI';
+import { NivelEnsino } from '../model/entities/BNCC';
 
 export const useOnboardingViewModel = () => {
     const { getUserContextUseCase, createUserContextUseCase } = useDI();
     const [showOnboarding, setShowOnboarding] = useState(false);
-    const [niveis, setNiveis] = useState<string[]>([]);
+    const [niveis, setNiveis] = useState<NivelEnsino[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -33,10 +34,11 @@ export const useOnboardingViewModel = () => {
     }, [getUserContextUseCase]);
 
     const toggleNivel = (level: string) => {
+        const nivel = level as NivelEnsino;
         setNiveis(prev =>
-            prev.includes(level)
-                ? prev.filter(l => l !== level)
-                : [...prev, level]
+            prev.includes(nivel)
+                ? prev.filter(l => l !== nivel)
+                : [...prev, nivel]
         );
     };
 
@@ -51,7 +53,7 @@ export const useOnboardingViewModel = () => {
         }
 
         try {
-            await createUserContextUseCase.execute(userId, niveis as any);
+            await createUserContextUseCase.execute(userId, niveis);
             setShowOnboarding(false);
         } catch (error) {
             console.error(error);

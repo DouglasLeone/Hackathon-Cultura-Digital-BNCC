@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useDI } from '../di/useDI';
 import { useToast } from '../view/components/ui/use-toast';
+import { NivelEnsino } from '../model/entities/BNCC';
 
 export const useSettingsViewModel = () => {
     const { getUserContextUseCase, updateUserContextUseCase } = useDI();
-    const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+    const [selectedLevels, setSelectedLevels] = useState<NivelEnsino[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const { toast } = useToast();
@@ -31,7 +32,7 @@ export const useSettingsViewModel = () => {
 
     const toggleNivel = (level: string) => {
         // Enforce single selection logic if using RadioGroup as per View
-        setSelectedLevels([level]);
+        setSelectedLevels([level as NivelEnsino]);
     };
 
     const handleSave = async () => {
@@ -43,7 +44,7 @@ export const useSettingsViewModel = () => {
         }
 
         try {
-            await updateUserContextUseCase.execute(userId, selectedLevels as any);
+            await updateUserContextUseCase.execute(userId, selectedLevels);
             toast({
                 title: "Sucesso",
                 description: "Configurações salvas com sucesso.",

@@ -136,7 +136,7 @@ const DisciplinaDetailScreen = () => {
 
                         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button size="default" className="shadow-md hover:shadow-lg transition-all">
+                                <Button data-tour="tour-new-unidade" size="default" className="shadow-md hover:shadow-lg transition-all">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Nova Unidade
                                 </Button>

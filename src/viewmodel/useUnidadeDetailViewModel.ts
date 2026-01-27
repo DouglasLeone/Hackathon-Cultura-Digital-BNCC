@@ -40,7 +40,7 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         } finally {
             setLoading(false);
         }
-    }, [unidadeId, toast]);
+    }, [unidadeId, toast, getUnidadeByIdUseCase]);
 
     const generatePlanoAula = async () => {
         if (!unidade) return;

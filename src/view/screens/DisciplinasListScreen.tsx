@@ -181,7 +181,7 @@ const DisciplinasListScreen = () => {
 
                         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300">
+                                <Button data-tour="tour-new-disciplina" className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300">
                                     <Plus className="w-4 h-4 mr-2" />
                                     Nova Disciplina
                                 </Button>
