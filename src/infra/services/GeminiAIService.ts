@@ -23,6 +23,126 @@ export class GeminiAIService implements IAIService {
         this.model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     }
 
+    private cleanAndParseJSON(text: string): any {
+        try {
+            // First pass: direct cleanup
+            const directCleaned = text.replace(/```json\n?|```/g, "").trim();
+            try {
+                return JSON.parse(directCleaned);
+            } catch (innerError) {
+                // Second pass: try to find the first '{' and last '}'
+                const firstBrace = text.indexOf('{');
+                const lastBrace = text.lastIndexOf('}');
+                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                    const extracted = text.substring(firstBrace, lastBrace + 1);
+                    return JSON.parse(extracted);
+                }
+
+                // Third pass: Try Reparation for Truncated JSON
+                // If it seems we have a valid start but invalid end, try to close it
+                if (firstBrace !== -1) {
+                    const fromStart = text.substring(firstBrace);
+                    const repaired = this.tryRepairJSON(fromStart);
+                    if (repaired) return JSON.parse(repaired);
+                }
+
+                throw innerError;
+            }
+        } catch (e) {
+            console.error("Failed to parse AI JSON. Length:", text.length);
+            console.error("Partial text:", text.substring(0, 500) + "...");
+            throw new Error(`Erro de processamento da IA: A resposta gerada não é um JSON válido. Detalhes: ${e instanceof Error ? e.message : 'Desconhecido'}`);
+        }
+    }
+
+    private tryRepairJSON(jsonStr: string): string | null {
+        try {
+            // Simple robust stack-based closer
+            let stack = [];
+            let inString = false;
+            let escape = false;
+
+            // Only process until the very end of validity? No, we just append missing closure.
+            // But we need to know WHAT is missing.
+            // Simplified approach: Count nesting levels.
+
+            // Actually, a lot of library solutions involve complex parsing.
+            // Let's try a heuristic: if it ends with "...", remove the "..."
+            if (jsonStr.endsWith("...")) {
+                jsonStr = jsonStr.substring(0, jsonStr.length - 3);
+            }
+
+            // If it ends inside a string (odd number of quotes?), close the string
+            // This is hard to do perfectly without a parser.
+            // Let's rely on a primitive closure strategy:
+            // 1. Close any open string (roughly)
+            // 2. Close any open objects/arrays
+
+            // Count balances
+            let openBraces = 0;
+            let openBrackets = 0;
+            let inQuote = false;
+
+            for (let i = 0; i < jsonStr.length; i++) {
+                const char = jsonStr[i];
+                if (inQuote) {
+                    if (char === '\\') { i++; continue; } // skip escaped
+                    if (char === '"') inQuote = false;
+                } else {
+                    if (char === '"') inQuote = true;
+                    else if (char === '{') openBraces++;
+                    else if (char === '}') openBraces--;
+                    else if (char === '[') openBrackets++;
+                    else if (char === ']') openBrackets--;
+                }
+            }
+
+            let repaired = jsonStr;
+            if (inQuote) repaired += '"'; // Close string
+
+            // Close arrays and objects in correct order? 
+            // We just counted balance. This assumes simple nesting.
+            // A properly truncated JSON usually needs Closing in reverse order.
+            // We can't know the order from just counters easily.
+            // Let's try to just append enough '}' and ']' to satisfy the count?
+            // This works if hierarchy is simple or correct.
+            // But if we have { [ }, we need ] }. 
+
+            // Improved strategy: Maintain a stack of expected closers
+            const closerStack = [];
+            let inQ = false;
+            let i = 0;
+            while (i < jsonStr.length) {
+                const c = jsonStr[i];
+                if (c === '\\' && inQ) { i += 2; continue; }
+                if (c === '"') { inQ = !inQ; }
+                if (!inQ) {
+                    if (c === '{') closerStack.push('}');
+                    if (c === '[') closerStack.push(']');
+                    if (c === '}' || c === ']') {
+                        // Pop the last matching
+                        // Note: this assumes valid JSON structure up to that point
+                        if (closerStack.length > 0) {
+                            const last = closerStack[closerStack.length - 1];
+                            if (c === last) closerStack.pop();
+                        }
+                    }
+                }
+                i++;
+            }
+
+            if (inQ) repaired += '"';
+            while (closerStack.length > 0) {
+                repaired += closerStack.pop();
+            }
+
+            return repaired;
+
+        } catch (e) {
+            return null;
+        }
+    }
+
     async suggestUnidades(disciplina: Disciplina, context?: UserContext): Promise<string[]> {
         const prompt = `
         Contexto: Professor de ${disciplina.nome} para a série ${disciplina.serie} (${disciplina.nivel}).
@@ -36,11 +156,13 @@ export class GeminiAIService implements IAIService {
         try {
             const result = await this.model.generateContent({
                 contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    maxOutputTokens: 4096,
+                    temperature: 0.7
+                }
             });
-            const response = result.response;
-            const text = response.text();
-            return JSON.parse(text);
+            return this.cleanAndParseJSON(result.response.text());
         } catch (error) {
             console.error("Error generating units:", error);
             return ["Erro ao gerar sugestões. Tente novamente."];
@@ -51,54 +173,19 @@ export class GeminiAIService implements IAIService {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
-        const prompt = `
+        const baseContext = `
         Contexto: Planejamento de aula para a unidade "${unidade.tema}" para a disciplina de ${unidade.disciplina?.nome || "Geral"}.
         Contexto Adicional: ${context ? JSON.stringify(context) : "Nenhum"}.
-        
         ${enrichedContext ? `ENRIQUECIMENTO PEDAGÓGICO:\n${enrichedContext}\n` : ""}
-        
-        BASE LEGAL (UTILIZE ESTES CÓDIGOS):
+        BASE LEGAL (CÓDIGOS BNCC):
         ${bnccContext}
+        `;
+
+        // Passo 1: Gerar Metadados (JSON leve)
+        const metadataPrompt = `
+        ${baseContext}
         
-        TAREFA: Gere um Plano de Aula PREMIUM com a seguinte estrutura no campo "conteudo" (Markdown):
-
-        # PLANO DE AULA: [TÍTULO IMPACTANTE]
-
-        ## 1. IDENTIFICAÇÃO E OBJETIVOS
-        - **Tema Principal**: [Nome do tema detalhado]
-        - **Habilidades da BNCC**: [Citar códigos ${codigosBNCC} e descrições]
-        - **Eixos de Cultura Digital**: [Identificar: Cidadania Digital, Letramento Digital ou Tecnologia e Sociedade]
-        - **Objetivos Específicos**: [3-4 objetivos usando Verbos de Bloom (analisar, criar, etc)]
-
-        ## 2. COMPETÊNCIAS TRABALHADAS (BNCC)
-        - [Relacionar com as 10 Competências Gerais da BNCC de forma justificada]
-
-        ## 3. DURAÇÃO E RECURSOS
-        - **Tempo Estimado**: [Ex: 2 aulas de 50min]
-        - **Recursos Digitais**: [Ferramentas, sites, apps]
-        - **ALTERNATIVA OFFLINE (DESPLUGADA)**: [Como dar essa mesma aula SEM internet ou computadores, usando materiais físicos ou dinâmicas]
-
-        ## 4. DESENVOLVIMENTO (PASSO A PASSO)
-        - **ENGANJAMENTO (15% do tempo)**: [Atividade provocadora]
-        - **EXPLORAÇÃO/CONTEÚDO (50% do tempo)**: [Atividade principal detalhada]
-        - **SÍNTESE/FECHAMENTO (15% do tempo)**: [Reflexão final]
-
-        ## 5. ATIVIDADES PRÁTICAS
-        - [Descrever pelo menos 1 atividade hands-on que conecte o conteúdo com a Cultura Digital]
-
-        ## 6. AVALIAÇÃO E ACOMPANHAMENTO
-        ### Rubricas de Desempenho:
-        - **Excelente**: [Critérios para domínio total]
-        - **Adequado**: [Critérios para aprendizado satisfatório]
-        - **Em Desenvolvimento**: [Critérios para quem ainda precisa de apoio]
-        - **Insuficiente**: [Critérios para quem não atingiu os objetivos]
-
-        ---
-
-        INSTRUÇÕES DE QUALIDADE:
-        1. Contextualize para a realidade brasileira.
-        2. Garanta que a seção "Alternativa Offline" seja realmente criativa e viável.
-        3. No campo "conteudo", use formatação Markdown rica (negrito, listas, tabelas se necessário).
+        TAREFA: Gere APENAS a estrutura de metadados do Plano de Aula.
         
         Formato de Resposta (JSON):
         {
@@ -108,21 +195,86 @@ export class GeminiAIService implements IAIService {
             "conteudo_programatico": "Resumo dos tópicos",
             "metodologia": "Resumo da estratégia",
             "recursos_didaticos": ["Recurso 1", "Recurso 2"],
-            "avaliacao": "Breve descrição do método",
-            "conteudo": "TEXTO MARKDOWN COMPLETO SEGUINDO A ESTRUTURA ACIMA"
+            "avaliacao": "Breve descrição do método"
         }
         `;
 
+        // Passo 2: Gerar Conteúdo Detalhado (Markdown puro)
+        const contentPrompt = `
+        ${baseContext}
+        
+        TAREFA: Gere o CONTEÚDO DETALHADO do Plano de Aula em formato MARKDOWN.
+        NÃO retorne JSON. Retorne apenas o texto Markdown.
+        
+        ESTRUTURA OBRIGATÓRIA (Use Markdown):
+        # [TÍTULO]
+
+        > **Visão Geral**: [Breve frase de impacto sobre a aula]
+
+        ## 1. Identificação e Objetivos
+        > **Tema Principal**: [Tema]
+        > **Habilidades BNCC**: [Citar códigos ${codigosBNCC}]
+        > **Eixos**: [Cultura Digital / Letramento / Tecnologia]
+
+        **Objetivos de Aprendizagem**:
+        - [Objetivo 1]
+        - [Objetivo 2]
+        - [Objetivo 3]
+
+        ## 2. Preparação
+        > **Tempo Necessário**: [Duração]
+        > **Recursos**: [Listar recursos físicos e digitais]
+        
+        **Alternativa Offline**:
+        - [Como adaptar sem internet]
+
+        ## 3. Desenvolvimento (Passo a Passo)
+        ### 1. Engajamento (15%)
+        [Como iniciar a aula, perguntas disparadoras]
+
+        ### 2. Exploração (50%)
+        [Conteúdo principal, explicação, exemplos]
+
+        > **Dica para o Professor**: [Sugestão pedagógica ou curiosidade]
+
+        ### 3. Síntese (15%)
+        [Como fechar a aula e verificar aprendizado]
+
+        ## 4. Atividade Prática
+        **Tarefa**: [Descrição da atividade]
+        
+        ## 5. Avaliação
+        - [Critérios de avaliação]
+        `;
+
         try {
-            const result = await this.model.generateContent({
-                contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            });
-            const response = result.response;
-            return JSON.parse(response.text());
+            // Executar em paralelo para ganhar tempo? Não, melhor sequencial para garantir contexto se necessário, 
+            // mas aqui são independentes. Vamos fazer paralelo para performance.
+            const [metadataResult, contentResult] = await Promise.all([
+                this.model.generateContent({
+                    contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + metadataPrompt }] }],
+                    generationConfig: { responseMimeType: "application/json", temperature: 0.7 }
+                }),
+                this.model.generateContent({
+                    contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + contentPrompt }] }],
+                    generationConfig: { responseMimeType: "text/plain", maxOutputTokens: 8192, temperature: 0.7 }
+                })
+            ]);
+
+            const metadata = this.cleanAndParseJSON(metadataResult.response.text());
+            const content = contentResult.response.text();
+
+            return {
+                ...metadata,
+                conteudo: content
+            };
+
         } catch (error) {
             console.error("Error generating lesson plan:", error);
-            return { titulo: "Erro ao gerar plano de aula" };
+            return {
+                titulo: "Erro ao gerar plano de aula",
+                conteudo: "Ocorreu um erro ao processar a resposta da IA. Por favor, tente novamente.\n\nDetalhes do erro: " + (error instanceof Error ? error.message : String(error))
+            };
         }
     }
 
@@ -169,14 +321,16 @@ export class GeminiAIService implements IAIService {
         try {
             const result = await this.model.generateContent({
                 contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    maxOutputTokens: 4096,
+                    temperature: 0.7
+                }
             });
-            const response = result.response;
-            return JSON.parse(response.text());
+            return this.cleanAndParseJSON(result.response.text());
         } catch (error) {
             console.error("Error generating activity:", error);
             throw error;
-            // return { titulo: "Erro ao gerar atividade" };
         }
     }
 
@@ -185,39 +339,48 @@ export class GeminiAIService implements IAIService {
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
         const prompt = `
-        Contexto: Apresentação de slides para uma aula sobre "${unidade.tema}".
+        Aja como um designer instrucional e especialista em apresentações educacionais.
+        Crie uma apresentação de slides profissional e engajadora sobre: "${unidade.tema}".
         Disciplina: ${unidade.disciplina?.nome || "Geral"}.
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
         Baseie-se nestas habilidades BNCC:
         ${bnccContext}
         
-        Tarefa: Crie o conteúdo para uma apresentação de 5 a 8 slides.
-        
-        Formato de Resposta (JSON Array de Objetos):
+        O tom deve ser educativo, claro e inspirador. Foco no engajamento dos alunos.
+
+        Estruture a resposta estritamente como um ARRAY JSON onde cada objeto é um slide.
+        Cada slide deve ter:
+        - "titulo": Título curto e impactante (max 8 palavras).
+        - "conteudo": Array de strings com os pontos chave (max 5 pontos, curtos e diretos).
+        - "imagem_sugerida": Descrição detalhada para uma imagem ou ícone que ilustraria esse slide (para IA geradora de imagem).
+        - "roteiro_professor": Texto explicativo para o professor falar durante esse slide (dicas didáticas, perguntas para a turma, aprofundamento).
+
+        Gere entre 5 a 8 slides cobrindo: Abertura (Capa), Objetivos (com codigos BNCC), Conceitos Chave, Exemplos Práticos, Atividade Interativa e Conclusão/Referências.
+
+        Exemplo de formato:
         [
             {
-                "titulo": "Título do Slide (ex: Introdução, Conceito X, Conclusão)",
-                "conteudo": ["Tópico 1 (curto)", "Tópico 2"],
-                "anotacoes": "Sugestão de fala para o professor explicar este slide."
+                "titulo": "O Ciclo da Água",
+                "conteudo": ["Evaporação dos oceanos", "Condensação nas nuvens", "Precipitação (chuva)"],
+                "imagem_sugerida": "Diagrama esquemático colorido mostrando o sol aquecendo o oceano e setas subindo.",
+                "roteiro_professor": "Comece perguntando: 'Para onde vai a água da chuva?' Explique que a água está em constante movimento."
             }
         ]
-        
-        Garanta que o primeiro slide seja a Capa e o último as Referências/Encerramento.
-        Mencione os códigos BNCC (${codigosBNCC}) em algum slide pertinente (ex: Objetivos).
         `;
 
         try {
             const result = await this.model.generateContent({
                 contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    maxOutputTokens: 4096,
+                    temperature: 0.7
+                }
             });
-            const response = result.response;
-            const text = response.text();
-            return JSON.parse(text);
+            return this.cleanAndParseJSON(result.response.text());
         } catch (error) {
             console.error("Error generating slides:", error);
-            // Fallback mock in case of failure
             return [
                 { titulo: "Erro na geração", conteudo: ["Não foi possível gerar os slides pela IA."], anotacoes: "Tente novamente." }
             ];

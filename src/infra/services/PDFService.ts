@@ -1,167 +1,452 @@
 import { jsPDF } from 'jspdf';
 import { PlanoAula, AtividadeAvaliativa } from '@/model/entities';
 
+interface TOCItem {
+    title: string;
+    page: number;
+    y: number;
+}
+
 export class PDFService {
-    private static readonly MARGIN = 20;
-    private static readonly LINE_HEIGHT = 7;
-    private static readonly PAGE_HEIGHT = 297; // A4 height in mm
-    private static readonly PAGE_WIDTH = 210; // A4 width in mm
+    private static readonly MARGIN_X = 24;
+    private static readonly MARGIN_Y = 24;
+    private static readonly LINE_HEIGHT = 6.5;
+    private static readonly PAGE_HEIGHT = 297;
+    private static readonly PAGE_WIDTH = 210;
+    private static readonly CONTENT_WIDTH = 162; // 210 - 24*2
 
-    static generateLessonPlanPDF(plano: PlanoAula, disciplina: string = 'Disciplina', tema: string = 'Tema'): void {
+    private static readonly COLORS = {
+        TEXT: '#37352f',
+        GRAY: '#787774',
+        BG_GRAY: '#f1f1ef',
+        BORDER_GRAY: '#e0e0e0',
+        ACCENT: '#2e86de'
+    };
+
+    private static currentY: number = 0;
+    private static currentX: number = 0;
+    private static tocItems: TOCItem[] = [];
+
+    static generateLessonPlanPDF(plano: PlanoAula, disciplina: string = 'Disciplina', tema: string = 'Tema', schoolName: string = 'Escola Exemplar'): void {
         const doc = new jsPDF();
-        let y = this.MARGIN;
+        this.resetState();
+        this.setupDocument(doc);
 
-        // Title
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        y = this.addText(doc, plano.titulo, y, 18);
-        y += 5;
+        // 1. Title Page & Properties
+        this.renderNotionHeader(doc, plano.titulo, schoolName);
+        this.renderProperties(doc, [
+            { label: 'Disciplina', value: disciplina },
+            { label: 'Tema', value: tema },
+            { label: 'Data', value: new Date().toLocaleDateString('pt-BR') }
+        ]);
 
-        // Subtitle (Disciplina / Tema)
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        y = this.addText(doc, `${disciplina} - ${tema}`, y, 12);
-        y += 10;
-        doc.setTextColor(0);
+        this.newLine(doc, 10);
 
-        // Sections
-        y = this.addSection(doc, 'Duração', plano.duracao, y);
-        y = this.addSection(doc, 'Objetivos', plano.objetivos.join('\n'), y);
-        y = this.addSection(doc, 'Conteúdo Programático', plano.conteudo_programatico, y);
-        y = this.addSection(doc, 'Metodologia', plano.metodologia, y);
-        y = this.addSection(doc, 'Recursos Didáticos', plano.recursos_didaticos.join('\n'), y);
-        y = this.addSection(doc, 'Avaliação', plano.avaliacao, y);
+        // 2. Reserve TOC Page (if content is long enough reasonably, but let's always add it for structure)
+        const tocPageNumber = doc.getNumberOfPages() + 1;
+        doc.addPage(); // Page 2
+        this.currentY = this.MARGIN_Y;
+        // We will render TOC content here LATER
 
-        if (plano.referencias) {
-            y = this.addSection(doc, 'Referências', plano.referencias, y);
-        }
+        // 3. Render Content (Start on Page 3 to be clean)
+        doc.addPage(); // Page 3
+        this.currentY = this.MARGIN_Y;
 
-        // Footer
-        this.addFooter(doc);
+        this.renderSmartContent(doc, plano.conteudo || '');
+
+        // 4. Go back and Render TOC
+        this.renderTOC(doc, tocPageNumber);
+
+        // 5. Global Polish (Footers)
+        this.addFooter(doc, schoolName);
 
         doc.save(`${this.sanitizeFilename(plano.titulo)}.pdf`);
     }
 
-    static generateActivityPDF(atividade: AtividadeAvaliativa, disciplina: string = 'Disciplina', tema: string = 'Tema'): void {
+    static generateActivityPDF(atividade: AtividadeAvaliativa, disciplina: string = 'Disciplina', tema: string = 'Tema', schoolName: string = 'Escola Exemplar'): void {
         const doc = new jsPDF();
-        let y = this.MARGIN;
+        this.resetState();
+        this.setupDocument(doc);
 
-        // Title
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        y = this.addText(doc, atividade.titulo, y, 18);
-        y += 5;
+        this.renderNotionHeader(doc, atividade.titulo, schoolName);
+        this.renderProperties(doc, [
+            { label: 'Disciplina', value: disciplina },
+            { label: 'Tipo', value: atividade.tipo }
+        ]);
 
-        // Metadata
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        y = this.addText(doc, `${disciplina} - ${tema} | Tipo: ${atividade.tipo}`, y, 12);
-        y += 10;
-        doc.setTextColor(0);
+        this.newLine(doc, 14);
 
-        // Instructions
-        y = this.addSection(doc, 'Instruções', atividade.instrucoes, y);
+        if (atividade.conteudo) {
+            this.renderSmartContent(doc, atividade.conteudo);
+        } else {
+            this.renderCallout(doc, atividade.instrucoes, "💡");
+            this.newLine(doc, 8);
 
-        // Questions
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        y = this.checkPageBreak(doc, y, 10);
-        doc.text('Questões', this.MARGIN, y);
-        y += 10;
+            this.renderHeader(doc, 'Questões', 16);
+            atividade.questoes.forEach((q, index) => {
+                this.newLine(doc, 4);
+                this.renderHeader(doc, `${index + 1}. ${q.enunciado}`, 12, false);
 
-        atividade.questoes.forEach((q, index) => {
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            y = this.checkPageBreak(doc, y, 10);
-            const questaoTitle = `Questão ${index + 1} (${q.pontuacao} pts)`;
-            doc.text(questaoTitle, this.MARGIN, y);
-            y += 7;
+                if (q.pontuacao) {
+                    const oldColor = doc.getTextColor();
+                    doc.setTextColor(this.COLORS.GRAY);
+                    doc.setFontSize(10);
+                    doc.text(`(${q.pontuacao} pontos)`, this.currentX + doc.getTextWidth(`${index + 1}. ${q.enunciado}`) + 2, this.currentY);
+                    doc.setTextColor(oldColor);
+                    this.newLine(doc, 4);
+                }
 
-            doc.setFont('helvetica', 'normal');
-            y = this.addText(doc, q.enunciado, y, 12);
-            y += 5;
-
-            if (q.tipo === 'multipla_escolha' && q.alternativas) {
-                q.alternativas.forEach((alt, i) => {
-                    const letter = String.fromCharCode(65 + i); // A, B, C...
-                    y = this.addText(doc, `${letter}) ${alt}`, y, 12, 10); // Indent
-                });
-                y += 5;
-            } else if (q.tipo === 'verdadeiro_falso') {
-                y = this.addText(doc, "( ) Verdadeiro  ( ) Falso", y, 12, 10);
-                y += 5;
-            } else {
-                // Dissertativa - Space for answer
-                y += 30;
-                y = this.checkPageBreak(doc, y);
-            }
-
-            y += 5; // Spacing between questions
-        });
-
-        // Footer
-        this.addFooter(doc);
-
+                if (q.tipo === 'multipla_escolha' && q.alternativas) {
+                    q.alternativas.forEach((alt, i) => {
+                        this.renderBullet(doc, `${String.fromCharCode(65 + i)}) ${alt}`, 8, '');
+                    });
+                } else if (q.tipo === 'verdadeiro_falso') {
+                    this.renderBullet(doc, "( ) Verdadeiro  ( ) Falso", 8, '');
+                } else {
+                    this.newLine(doc, 4);
+                    doc.setDrawColor(this.COLORS.BORDER_GRAY);
+                    doc.line(this.currentX, this.currentY, this.currentX + this.CONTENT_WIDTH, this.currentY);
+                    this.newLine(doc, 6);
+                    doc.line(this.currentX, this.currentY, this.currentX + this.CONTENT_WIDTH, this.currentY);
+                    this.newLine(doc, 2);
+                }
+            });
+        }
+        this.addFooter(doc, schoolName);
         doc.save(`${this.sanitizeFilename(atividade.titulo)}.pdf`);
     }
 
-    private static addSection(doc: jsPDF, title: string, content: string, startY: number): number {
-        let y = startY;
-
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        y = this.checkPageBreak(doc, y, 10);
-        doc.text(title, this.MARGIN, y);
-        y += 7;
-
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        y = this.addText(doc, content, y, 12);
-
-        return y + 5; // Add spacing after section
+    private static resetState(): void {
+        this.tocItems = [];
+        this.currentY = this.MARGIN_Y;
     }
 
-    // Helper to add text with wrapping and page breaks
-    // Returns the new Y position
-    private static addText(doc: jsPDF, text: string, y: number, fontSize: number, indent: number = 0): number {
-        const maxWidth = this.PAGE_WIDTH - (this.MARGIN * 2) - indent;
-        const lines = doc.splitTextToSize(text, maxWidth);
+    private static setupDocument(doc: jsPDF): void {
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(this.COLORS.TEXT);
+    }
 
-        lines.forEach((line: string) => {
-            y = this.checkPageBreak(doc, y, this.LINE_HEIGHT);
-            doc.text(line, this.MARGIN + indent, y);
-            y += this.LINE_HEIGHT;
+    private static renderTOC(doc: jsPDF, pageNum: number): void {
+        doc.setPage(pageNum);
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(this.COLORS.TEXT);
+        doc.text("Sumário", this.MARGIN_X, this.MARGIN_Y);
+
+        let y = this.MARGIN_Y + 15;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+
+        if (this.tocItems.length === 0) {
+            doc.setTextColor(this.COLORS.GRAY);
+            doc.text("Nenhum item indexado.", this.MARGIN_X, y);
+            return;
+        }
+
+        this.tocItems.forEach(item => {
+            const pageStr = `${item.page}`;
+
+            // Draw Dots
+            const titleWidth = doc.getTextWidth(item.title);
+            const numWidth = doc.getTextWidth(pageStr);
+            const dotsWidth = this.CONTENT_WIDTH - titleWidth - numWidth - 5;
+
+            doc.setTextColor(this.COLORS.ACCENT); // Link color
+            doc.text(item.title, this.MARGIN_X, y);
+
+            doc.setTextColor(this.COLORS.BORDER_GRAY);
+            if (dotsWidth > 0) {
+                doc.text(".".repeat(Math.floor(dotsWidth / 2)), this.MARGIN_X + titleWidth + 2, y);
+            }
+
+            doc.setTextColor(this.COLORS.TEXT);
+            doc.text(pageStr, this.MARGIN_X + this.CONTENT_WIDTH - numWidth, y);
+
+            // Link is clickable in PDF
+            doc.link(this.MARGIN_X, y - 5, this.CONTENT_WIDTH, 7, { pageNumber: item.page, top: item.y });
+
+            y += 8;
+        });
+    }
+
+    private static renderNotionHeader(doc: jsPDF, title: string, subtitle: string = ''): void {
+        // Branding Hint (Top Right)
+        if (subtitle) {
+            doc.setFontSize(9);
+            doc.setTextColor(this.COLORS.GRAY);
+            doc.text(subtitle.toUpperCase(), this.PAGE_WIDTH - this.MARGIN_X, this.MARGIN_Y, { align: 'right' });
+        }
+
+        // Notion Page Icon Style
+        doc.setFillColor(this.COLORS.BG_GRAY);
+        doc.roundedRect(this.MARGIN_X, this.currentY, 20, 20, 2, 2, 'F');
+        doc.setFontSize(14);
+        doc.setTextColor(this.COLORS.GRAY);
+        doc.text("DOC", this.MARGIN_X + 2, this.currentY + 14);
+
+        this.newLine(doc, 24);
+
+        // Title
+        doc.setFontSize(28);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(this.COLORS.TEXT);
+
+        const titleLines = doc.splitTextToSize(title, this.CONTENT_WIDTH);
+        doc.text(titleLines, this.MARGIN_X, this.currentY);
+        this.currentY += (titleLines.length * 12);
+
+        doc.setFont('helvetica', 'normal');
+        this.newLine(doc, 5);
+
+        // Separator
+        doc.setDrawColor(this.COLORS.BORDER_GRAY);
+        doc.line(this.MARGIN_X, this.currentY, this.PAGE_WIDTH - this.MARGIN_X, this.currentY);
+        this.newLine(doc, 8);
+    }
+
+    private static renderProperties(doc: jsPDF, props: { label: string, value: string }[]): void {
+        doc.setFontSize(10);
+
+        props.forEach(p => {
+            doc.setTextColor(this.COLORS.GRAY);
+            doc.text(p.label, this.MARGIN_X, this.currentY);
+
+            // Value aligned
+            doc.setTextColor(this.COLORS.TEXT);
+            doc.text(p.value, this.MARGIN_X + 30, this.currentY);
+
+            this.newLine(doc, 5);
+        });
+    }
+
+    private static renderSmartContent(doc: jsPDF, content: string): void {
+        if (!content) return;
+
+        const lines = content.split('\n');
+        let tableRows: string[][] = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+            if (!line) { this.newLine(doc, 4); continue; }
+
+            // Table Detection
+            if (line.startsWith('|')) {
+                if (/^\|[-:\s|]+\|$/.test(line)) {
+                    continue; // Skip separator line
+                }
+                const row = line.split('|').map(cell => cell.trim()).filter((val, idx, arr) => idx > 0 && idx < arr.length - 1);
+                if (row.length === 0 && line.length > 2) tableRows.push(line.substring(1, line.length - 1).split('|').map(c => c.trim()));
+                else tableRows.push(row);
+
+                if (i + 1 >= lines.length || !lines[i + 1].trim().startsWith('|')) {
+                    this.renderTable(doc, tableRows);
+                    tableRows = [];
+                }
+                continue;
+            }
+
+            // Headers & TOC Tracking
+            if (line.startsWith('# ')) {
+                this.newLine(doc, 8);
+                const text = line.substring(2);
+                this.renderHeader(doc, text, 20);
+                this.addToTOC(doc, text);
+                continue;
+            }
+            if (line.startsWith('## ')) {
+                this.newLine(doc, 6);
+                const text = line.substring(3);
+                this.renderHeader(doc, text, 16);
+                this.addToTOC(doc, text);
+                continue;
+            }
+            if (line.startsWith('### ')) {
+                this.newLine(doc, 4);
+                this.renderHeader(doc, line.substring(4), 14);
+                continue;
+            }
+
+            // Blockquotes
+            if (line.startsWith('> ')) {
+                let calloutText = line.substring(2);
+                while (i + 1 < lines.length && lines[i + 1].trim().startsWith('> ')) {
+                    i++;
+                    calloutText += ' ' + lines[i].trim().substring(2);
+                }
+                this.renderCallout(doc, calloutText);
+                continue;
+            }
+
+            // Lists
+            if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
+                this.renderBullet(doc, line.substring(2));
+                continue;
+            }
+            if (/^\d+\.\s/.test(line)) {
+                const match = line.match(/^(\d+\.\s)(.*)/);
+                if (match) this.renderBullet(doc, match[2], 5, match[1]);
+                continue;
+            }
+
+            // Paragraphs
+            if (line.startsWith('**') && line.endsWith('**')) {
+                this.addRichParagraph(doc, line.replace(/\*\*/g, ''), 11, 'bold');
+            } else {
+                this.addRichParagraph(doc, line, 11, 'normal');
+            }
+            this.newLine(doc, 4);
+        }
+    }
+
+    private static addToTOC(doc: jsPDF, title: string): void {
+        this.tocItems.push({
+            title: title,
+            page: doc.getCurrentPageInfo().pageNumber,
+            y: this.currentY
+        });
+    }
+
+    private static renderTable(doc: jsPDF, rows: string[][]): void {
+        if (rows.length === 0) return;
+        const colCount = rows[0].length;
+        const colWidth = this.CONTENT_WIDTH / colCount;
+        const padding = 2;
+
+        rows.forEach((row, rowIndex) => {
+            let maxCellHeight = 0;
+            const processedCells = row.map(cell => {
+                const cellLines = doc.splitTextToSize(cell, colWidth - (padding * 2));
+                const h = (cellLines.length * 6) + (padding * 2);
+                if (h > maxCellHeight) maxCellHeight = h;
+                return cellLines;
+            });
+
+            this.currentY = this.checkPageBreak(doc, this.currentY, maxCellHeight);
+
+            if (rowIndex === 0) {
+                doc.setFillColor(this.COLORS.BG_GRAY);
+                doc.rect(this.MARGIN_X, this.currentY, this.CONTENT_WIDTH, maxCellHeight, 'F');
+                doc.setFont('helvetica', 'bold');
+            } else {
+                doc.setFont('helvetica', 'normal');
+            }
+
+            let currentX = this.MARGIN_X;
+            doc.setDrawColor(this.COLORS.BORDER_GRAY);
+            doc.setTextColor(this.COLORS.TEXT);
+            doc.setFontSize(9);
+
+            row.forEach((_, colIndex) => {
+                doc.rect(currentX, this.currentY, colWidth, maxCellHeight);
+                doc.text(processedCells[colIndex], currentX + padding, this.currentY + padding + 4);
+                currentX += colWidth;
+            });
+
+            this.currentY += maxCellHeight;
         });
 
-        return y;
+        this.newLine(doc, 4);
+        doc.setFontSize(11);
     }
 
-    private static checkPageBreak(doc: jsPDF, y: number, spaceNeeded: number = 0): number {
-        if (y + spaceNeeded >= this.PAGE_HEIGHT - this.MARGIN) {
+    private static renderHeader(doc: jsPDF, text: string, size: number, bold: boolean = true): void {
+        doc.setFontSize(size);
+        doc.setFont('helvetica', bold ? 'bold' : 'normal');
+        doc.setTextColor(this.COLORS.TEXT);
+
+        const lines = doc.splitTextToSize(text, this.CONTENT_WIDTH);
+        doc.text(lines, this.MARGIN_X, this.currentY);
+
+        this.currentY += (lines.length * (size * 0.4));
+        doc.setFont('helvetica', 'normal');
+    }
+
+    private static renderCallout(doc: jsPDF, text: string, icon: string = "💡"): void {
+        doc.setFontSize(11);
+        const padding = 6;
+        const iconWidth = 10;
+
+        const availableWidth = this.CONTENT_WIDTH - (padding * 2) - iconWidth;
+        const lines = doc.splitTextToSize(text, availableWidth);
+        const lineHeight = 7;
+        const boxHeight = (lines.length * lineHeight) + (padding * 2);
+
+        this.currentY = this.checkPageBreak(doc, this.currentY, boxHeight);
+
+        doc.setFillColor(this.COLORS.BG_GRAY);
+        doc.setDrawColor(this.COLORS.BG_GRAY);
+        doc.roundedRect(this.MARGIN_X, this.currentY, this.CONTENT_WIDTH, boxHeight, 2, 2, 'F');
+
+        // Icon replacement
+        doc.setFillColor(255, 255, 255);
+        doc.circle(this.MARGIN_X + padding + 3, this.currentY + padding + 4, 3, 'F');
+        doc.setTextColor(this.COLORS.GRAY);
+        doc.setFontSize(8);
+        doc.text("i", this.MARGIN_X + padding + 2.2, this.currentY + padding + 5);
+
+        // Text
+        doc.setFontSize(10);
+        doc.setTextColor(this.COLORS.TEXT);
+        doc.text(lines, this.MARGIN_X + padding + iconWidth, this.currentY + padding + 5, { lineHeightFactor: 1.5 });
+
+        this.currentY += boxHeight;
+        this.newLine(doc, 4);
+    }
+
+    private static renderBullet(doc: jsPDF, text: string, indent: number = 5, bullet: string = '• '): void {
+        const bulletWidth = doc.getTextWidth(bullet);
+        const textWidth = this.CONTENT_WIDTH - indent - bulletWidth;
+        const lines = doc.splitTextToSize(text, textWidth);
+        const lineHeight = 7;
+
+        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * lineHeight);
+
+        doc.text(bullet, this.MARGIN_X + indent, this.currentY);
+        doc.text(lines, this.MARGIN_X + indent + bulletWidth, this.currentY, { lineHeightFactor: 1.5 });
+
+        this.currentY += (lines.length * lineHeight) + 2;
+    }
+
+    private static addRichParagraph(doc: jsPDF, text: string, size: number, style: string): void {
+        doc.setFontSize(size);
+
+        const cleanText = text.replace(/\*\*/g, '');
+        const lines = doc.splitTextToSize(cleanText, this.CONTENT_WIDTH);
+        const lineHeight = 7;
+
+        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * lineHeight);
+        doc.text(lines, this.MARGIN_X, this.currentY, { lineHeightFactor: 1.5 });
+        this.currentY += (lines.length * lineHeight);
+    }
+
+    private static newLine(doc: jsPDF, s: number = this.LINE_HEIGHT): void {
+        this.currentY += s;
+        if (this.currentY >= this.PAGE_HEIGHT - this.MARGIN_Y) {
             doc.addPage();
-            return this.MARGIN;
+            this.currentY = this.MARGIN_Y;
+        }
+    }
+
+    private static checkPageBreak(doc: jsPDF, y: number, h: number): number {
+        if (y + h >= this.PAGE_HEIGHT - this.MARGIN_Y) {
+            doc.addPage();
+            return this.MARGIN_Y;
         }
         return y;
     }
 
-    private static addFooter(doc: jsPDF): void {
-        const totalPages = doc.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
+    private static addFooter(doc: jsPDF, schoolName: string = ''): void {
+        const total = doc.getNumberOfPages();
+        for (let i = 1; i <= total; i++) {
             doc.setPage(i);
-            doc.setFontSize(10);
-            doc.setTextColor(150);
-            doc.text(
-                `Gerado por Aula Criativa AI - Página ${i} de ${totalPages}`,
-                this.PAGE_WIDTH / 2,
-                this.PAGE_HEIGHT - 10,
-                { align: 'center' }
-            );
+            doc.setFontSize(9);
+            doc.setTextColor(this.COLORS.GRAY);
+
+            const text = `Aula Criativa AI${schoolName ? ` | ${schoolName}` : ''} - Página ${i} de ${total}`;
+            doc.text(text, this.PAGE_WIDTH / 2, this.PAGE_HEIGHT - 10, { align: 'center' });
         }
     }
 
-    private static sanitizeFilename(name: string): string {
-        return name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    }
+    private static sanitizeFilename(n: string): string { return n.replace(/[^a-z0-9]/gi, '_').toLowerCase(); }
 }

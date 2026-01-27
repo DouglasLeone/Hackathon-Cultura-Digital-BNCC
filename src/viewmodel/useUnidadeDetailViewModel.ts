@@ -236,15 +236,33 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
     const updateAtividade = async (conteudo: string) => {
         if (!unidade || !unidade.atividade_avaliativa) return;
         try {
-            const parsed = JSON.parse(conteudo);
-            await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
-            setUnidade(prev => prev && prev.atividade_avaliativa ? {
-                ...prev,
-                atividade_avaliativa: { ...prev.atividade_avaliativa, questoes: parsed }
-            } : prev);
+            // Check if it's HTML (from rich editor) or JSON
+            if (conteudo.trim().startsWith('<')) {
+                await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { conteudo });
+                setUnidade(prev => prev && prev.atividade_avaliativa ? {
+                    ...prev,
+                    atividade_avaliativa: { ...prev.atividade_avaliativa, conteudo }
+                } : prev);
+            } else {
+                // Try JSON for backward compatibility or structured editing
+                try {
+                    const parsed = JSON.parse(conteudo);
+                    await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { questoes: parsed });
+                    setUnidade(prev => prev && prev.atividade_avaliativa ? {
+                        ...prev,
+                        atividade_avaliativa: { ...prev.atividade_avaliativa, questoes: parsed }
+                    } : prev);
+                } catch (e) {
+                    // If not JSON and not HTML, maybe it's just text
+                    await updateAtividadeUseCase.execute(unidade.atividade_avaliativa.id, { conteudo });
+                    setUnidade(prev => prev && prev.atividade_avaliativa ? {
+                        ...prev,
+                        atividade_avaliativa: { ...prev.atividade_avaliativa, conteudo }
+                    } : prev);
+                }
+            }
         } catch (error) {
             console.error('Error updating atividade:', error);
-            // If it's a JSON error, it will be caught here
             throw error;
         }
     };
