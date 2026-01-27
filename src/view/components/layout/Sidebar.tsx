@@ -44,6 +44,7 @@ export function Sidebar({ className, onClose }: SidebarProps) {
               key={item.path}
               to={item.path}
               onClick={onClose}
+              data-tour={item.label === 'Disciplinas' ? 'tour-sidebar-disciplinas' : undefined}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200',
                 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
