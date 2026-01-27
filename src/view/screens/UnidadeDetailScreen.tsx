@@ -386,7 +386,7 @@ const UnidadeDetailScreen = () => {
                                                 Visualizar Slides
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="max-w-4xl w-full">
+                                        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-y-auto p-6 md:p-8">
                                             {/* DialogTitle is required for accessibility but hidden visually if needed, or we keep it generic */}
                                             <DialogTitle>Slides: {unidade.tema}</DialogTitle>
                                             <ViewComponentsSlidesViewer
