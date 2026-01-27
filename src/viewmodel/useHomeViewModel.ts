@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useDI } from '../di/useDI';
 import { HistoricoGeracao } from '../model/entities';
+import { NivelEnsino } from '../model/entities/BNCC';
 
 export const useHomeViewModel = () => {
     const {
@@ -33,7 +34,7 @@ export const useHomeViewModel = () => {
 
                 // 1. Filter Disciplinas
                 const filteredDisciplinas = hasFilter
-                    ? disciplinas.filter(d => allowedLevels.includes(d.nivel as any))
+                    ? disciplinas.filter(d => allowedLevels.includes(d.nivel as NivelEnsino))
                     : disciplinas;
                 const disciplinaIds = new Set(filteredDisciplinas.map(d => d.id));
 

@@ -262,6 +262,7 @@ const UnidadeDetailScreen = () => {
                                 <div className="pt-4">
                                     <p className="text-sm text-muted-foreground mb-4">Nenhum plano gerado.</p>
                                     <Button
+                                        data-tour="tour-generate-plano"
                                         onClick={generatePlanoAula}
                                         disabled={generating === 'plano'}
                                         className="w-full"

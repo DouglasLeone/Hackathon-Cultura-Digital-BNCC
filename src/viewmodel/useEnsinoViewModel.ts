@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useDI } from '../di/useDI';
+import { NivelEnsino } from '../model/entities/BNCC';
 
 // Hardcoded areas for simplicity or fetch from domain constants
 const AREAS_FUNDAMENTAL = ['Linguagens', 'Matemática', 'Ciências da Natureza', 'Ciências Humanas', 'Ensino Religioso'];
@@ -8,7 +9,7 @@ const AREAS_MEDIO = ['Linguagens e suas Tecnologias', 'Matemática e suas Tecnol
 
 export const useEnsinoViewModel = () => {
     const { getUserContextUseCase, createUserContextUseCase, updateUserContextUseCase } = useDI();
-    const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+    const [selectedLevels, setSelectedLevels] = useState<NivelEnsino[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -30,10 +31,11 @@ export const useEnsinoViewModel = () => {
     }, [getUserContextUseCase]);
 
     const toggleLevel = (level: string) => {
+        const nivel = level as NivelEnsino;
         setSelectedLevels(prev =>
-            prev.includes(level)
-                ? prev.filter(l => l !== level)
-                : [...prev, level]
+            prev.includes(nivel)
+                ? prev.filter(l => l !== nivel)
+                : [...prev, nivel]
         );
     };
 
@@ -45,9 +47,9 @@ export const useEnsinoViewModel = () => {
         try {
             const existing = await getUserContextUseCase.execute(userId);
             if (existing) {
-                await updateUserContextUseCase.execute(userId, selectedLevels as any);
+                await updateUserContextUseCase.execute(userId, selectedLevels);
             } else {
-                await createUserContextUseCase.execute(userId, selectedLevels as any);
+                await createUserContextUseCase.execute(userId, selectedLevels);
             }
             return true;
         } catch (error) {

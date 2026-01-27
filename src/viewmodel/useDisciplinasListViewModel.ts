@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Disciplina, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { useDI } from '../di/useDI';
+import { NivelEnsino } from '../model/entities/BNCC';
 
 export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: string, nivelFilter?: string) => {
     const {
@@ -27,7 +28,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
                 if (ctx && ctx.niveis_ensino && ctx.niveis_ensino.length > 0) {
                     // Filter Disciplinas: Only show those matching the user (Ensino Fundamental/Médio)
                     // Note: Disciplina 'nivel' field must match one of the user's selected levels
-                    data = data.filter(d => ctx.niveis_ensino.includes(d.nivel as any));
+                    data = data.filter(d => ctx.niveis_ensino.includes(d.nivel as NivelEnsino));
                 }
             }
 
@@ -52,7 +53,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
         } finally {
             setLoading(false);
         }
-    }, [toast, areaFilter, serieFilter, nivelFilter, getAllDisciplinasUseCase, getUserContextUseCase]);
+    }, [areaFilter, serieFilter, nivelFilter, getAllDisciplinasUseCase, getUserContextUseCase]);
 
     const deleteDisciplina = async (id: string) => {
         try {
