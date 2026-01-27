@@ -4,7 +4,7 @@ import { PlanoAula, AtividadeAvaliativa } from '@/model/entities';
 export class PDFService {
     private static readonly MARGIN_X = 24;
     private static readonly MARGIN_Y = 24;
-    private static readonly LINE_HEIGHT = 6.5; // Slightly tighter line height for a clean look
+    private static readonly LINE_HEIGHT = 6.5;
     private static readonly PAGE_HEIGHT = 297;
     private static readonly PAGE_WIDTH = 210;
     private static readonly CONTENT_WIDTH = 162; // 210 - 24*2
@@ -94,21 +94,26 @@ export class PDFService {
     }
 
     private static setupDocument(doc: jsPDF): void {
-        doc.setFont('helvetica', 'normal'); // Closest to san-serif standard
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(this.COLORS.TEXT);
         this.currentY = this.MARGIN_Y;
         this.currentX = this.MARGIN_X;
     }
 
     private static renderNotionHeader(doc: jsPDF, title: string): void {
-        // Icon (simulated)
-        doc.setFontSize(40);
-        doc.text("📄", this.MARGIN_X, this.currentY + 10);
-        this.newLine(doc, 20);
+        // Notion Page Icon Style
+        doc.setFillColor(this.COLORS.BG_GRAY);
+        doc.roundedRect(this.MARGIN_X, this.currentY, 20, 20, 2, 2, 'F');
+        doc.setFontSize(14);
+        doc.setTextColor(this.COLORS.GRAY);
+        doc.text("DOC", this.MARGIN_X + 2, this.currentY + 14);
+
+        this.newLine(doc, 24);
 
         // Title
         doc.setFontSize(28);
         doc.setFont('helvetica', 'bold');
+        doc.setTextColor(this.COLORS.TEXT);
 
         const titleLines = doc.splitTextToSize(title, this.CONTENT_WIDTH);
         doc.text(titleLines, this.MARGIN_X, this.currentY);
@@ -141,12 +146,37 @@ export class PDFService {
     private static renderSmartContent(doc: jsPDF, content: string): void {
         if (!content) return;
 
-        // Very basic markdown parsing for Notion-like structure
         const lines = content.split('\n');
+        let tableRows: string[][] = [];
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i].trim();
             if (!line) { this.newLine(doc, 4); continue; }
+
+            // Table Detection
+            if (line.startsWith('|')) {
+                if (/^\|[-:\s|]+\|$/.test(line)) {
+                    continue; // Skip separator line
+                }
+
+                const row = line.split('|')
+                    .map(cell => cell.trim())
+                    .filter((val, idx, arr) => idx > 0 && idx < arr.length - 1);
+
+                // Fallback for edge cases
+                if (row.length === 0 && line.length > 2) {
+                    const altRow = line.substring(1, line.length - 1).split('|').map(c => c.trim());
+                    tableRows.push(altRow);
+                } else {
+                    tableRows.push(row);
+                }
+
+                if (i + 1 >= lines.length || !lines[i + 1].trim().startsWith('|')) {
+                    this.renderTable(doc, tableRows);
+                    tableRows = [];
+                }
+                continue;
+            }
 
             // Headers
             if (line.startsWith('# ')) {
@@ -167,7 +197,6 @@ export class PDFService {
 
             // Blockquote / Callout
             if (line.startsWith('> ')) {
-                // Collect all consecutive blockquotes
                 let calloutText = line.substring(2);
                 while (i + 1 < lines.length && lines[i + 1].trim().startsWith('> ')) {
                     i++;
@@ -188,7 +217,7 @@ export class PDFService {
                 continue;
             }
 
-            // Bold Paragraph (simulating Strong) or Normal
+            // Bold Paragraph
             if (line.startsWith('**') && line.endsWith('**')) {
                 this.addRichParagraph(doc, line.replace(/\*\*/g, ''), 11, 'bold');
             } else {
@@ -196,6 +225,55 @@ export class PDFService {
             }
             this.newLine(doc, 4);
         }
+    }
+
+    private static renderTable(doc: jsPDF, rows: string[][]): void {
+        if (rows.length === 0) return;
+
+        const colCount = rows[0].length;
+        const colWidth = this.CONTENT_WIDTH / colCount;
+        const padding = 2;
+
+        rows.forEach((row, rowIndex) => {
+            // 1. Pre-calculate height
+            let maxCellHeight = 0;
+            const processedCells = row.map(cell => {
+                const cellLines = doc.splitTextToSize(cell, colWidth - (padding * 2));
+                const h = (cellLines.length * 6) + (padding * 2); // 6 lineHeight for table
+                if (h > maxCellHeight) maxCellHeight = h;
+                return cellLines;
+            });
+
+            // 2. Check Break
+            this.currentY = this.checkPageBreak(doc, this.currentY, maxCellHeight);
+
+            // 3. Header BG
+            if (rowIndex === 0) {
+                doc.setFillColor(this.COLORS.BG_GRAY);
+                doc.rect(this.MARGIN_X, this.currentY, this.CONTENT_WIDTH, maxCellHeight, 'F');
+                doc.setFont('helvetica', 'bold');
+            } else {
+                doc.setFont('helvetica', 'normal');
+            }
+
+            // 4. Render
+            let currentX = this.MARGIN_X;
+            doc.setDrawColor(this.COLORS.BORDER_GRAY);
+            doc.setTextColor(this.COLORS.TEXT);
+            doc.setFontSize(9);
+
+            row.forEach((_, colIndex) => {
+                doc.rect(currentX, this.currentY, colWidth, maxCellHeight);
+                const lines = processedCells[colIndex];
+                doc.text(lines, currentX + padding, this.currentY + padding + 4);
+                currentX += colWidth;
+            });
+
+            this.currentY += maxCellHeight;
+        });
+
+        this.newLine(doc, 4);
+        doc.setFontSize(11);
     }
 
     private static renderHeader(doc: jsPDF, text: string, size: number, bold: boolean = true): void {
@@ -217,23 +295,26 @@ export class PDFService {
 
         const availableWidth = this.CONTENT_WIDTH - (padding * 2) - iconWidth;
         const lines = doc.splitTextToSize(text, availableWidth);
-        const boxHeight = (lines.length * 5) + (padding * 2);
+        const lineHeight = 7;
+        const boxHeight = (lines.length * lineHeight) + (padding * 2);
 
-        // Background
         this.currentY = this.checkPageBreak(doc, this.currentY, boxHeight);
 
         doc.setFillColor(this.COLORS.BG_GRAY);
-        doc.setDrawColor(this.COLORS.BG_GRAY); // No border usually, checking style
+        doc.setDrawColor(this.COLORS.BG_GRAY);
         doc.roundedRect(this.MARGIN_X, this.currentY, this.CONTENT_WIDTH, boxHeight, 2, 2, 'F');
 
-        // Icon
-        doc.setFontSize(14);
-        doc.text(icon, this.MARGIN_X + padding, this.currentY + padding + 5);
+        // Icon replacement
+        doc.setFillColor(255, 255, 255);
+        doc.circle(this.MARGIN_X + padding + 3, this.currentY + padding + 4, 3, 'F');
+        doc.setTextColor(this.COLORS.GRAY);
+        doc.setFontSize(8);
+        doc.text("i", this.MARGIN_X + padding + 2.2, this.currentY + padding + 5);
 
         // Text
         doc.setFontSize(10);
         doc.setTextColor(this.COLORS.TEXT);
-        doc.text(lines, this.MARGIN_X + padding + iconWidth, this.currentY + padding + 4);
+        doc.text(lines, this.MARGIN_X + padding + iconWidth, this.currentY + padding + 5, { lineHeightFactor: 1.5 });
 
         this.currentY += boxHeight;
         this.newLine(doc, 4);
@@ -243,37 +324,26 @@ export class PDFService {
         const bulletWidth = doc.getTextWidth(bullet);
         const textWidth = this.CONTENT_WIDTH - indent - bulletWidth;
         const lines = doc.splitTextToSize(text, textWidth);
+        const lineHeight = 7;
 
-        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * 5);
+        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * lineHeight);
 
         doc.text(bullet, this.MARGIN_X + indent, this.currentY);
-        doc.text(lines, this.MARGIN_X + indent + bulletWidth, this.currentY);
+        doc.text(lines, this.MARGIN_X + indent + bulletWidth, this.currentY, { lineHeightFactor: 1.5 });
 
-        this.currentY += (lines.length * 5) + 2;
+        this.currentY += (lines.length * lineHeight) + 2;
     }
 
     private static addRichParagraph(doc: jsPDF, text: string, size: number, style: string): void {
         doc.setFontSize(size);
 
-        // Simple bold parser for now within paragraph
-        const parts = text.split(/(\*\*.*?\*\*)/g);
-        let xOffset = 0;
-
-        // We need a better multi-line approach for rich text. 
-        // jsPDF simple splitTextToSize ignores font usage changes mid-stream.
-        // For 'Notion-clean', we can stick to simple text for body or just render the whole thing.
-        // Let's strip ** for purity if we can't render perfectly, OR, try best effort.
-
-        // Best effort: Clean strip for width calculation, but this is hard.
-        // Let's just render plain for stability in this 'Notion' version unless we implement complex cursor tracking.
-        // Ideally we render lines.
-
         const cleanText = text.replace(/\*\*/g, '');
         const lines = doc.splitTextToSize(cleanText, this.CONTENT_WIDTH);
+        const lineHeight = 7;
 
-        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * 5);
-        doc.text(lines, this.MARGIN_X, this.currentY);
-        this.currentY += (lines.length * 5);
+        this.currentY = this.checkPageBreak(doc, this.currentY, lines.length * lineHeight);
+        doc.text(lines, this.MARGIN_X, this.currentY, { lineHeightFactor: 1.5 });
+        this.currentY += (lines.length * lineHeight);
     }
 
     private static newLine(doc: jsPDF, s: number = this.LINE_HEIGHT): void {
