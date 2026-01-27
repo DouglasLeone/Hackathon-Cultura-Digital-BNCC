@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import { Edit, Save, Download, X } from 'lucide-react';
 import { useToast } from './ui/use-toast';
+import { RichTextEditor } from './RichTextEditor';
 
 interface ContentEditorProps {
     title: string;
@@ -13,6 +12,7 @@ interface ContentEditorProps {
     exportLabel?: string;
     variant?: 'default' | 'minimal';
     hideTitle?: boolean;
+    useRichEditor?: boolean; // New prop to enable rich text editor
 }
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -22,7 +22,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     onExport,
     exportLabel = "Exportar",
     variant = 'default',
-    hideTitle = false
+    hideTitle = false,
+    useRichEditor = true // Default to true for rich editing
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [content, setContent] = useState(initialContent);
@@ -39,6 +40,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         try {
             await onSave(content);
             setIsEditing(false);
+            toast({
+                title: "Salvo com sucesso",
+                description: "Suas alterações foram salvas.",
+            });
         } catch (error) {
             console.error(error);
             toast({
@@ -99,16 +104,27 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 </div>
             </div>
 
-            {isEditing ? (
-                <Textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4"
+            {useRichEditor ? (
+                <RichTextEditor
+                    content={content}
+                    onChange={setContent}
+                    editable={isEditing}
+                    className="flex-1"
                 />
             ) : (
-                <div className="prose max-w-none text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto p-1">
-                    {content}
-                </div>
+                <>
+                    {isEditing ? (
+                        <textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4 border rounded-md"
+                        />
+                    ) : (
+                        <div className="prose max-w-none text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto p-1">
+                            {content}
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
