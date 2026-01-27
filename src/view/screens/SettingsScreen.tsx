@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/view/components/ui/radio-group"
 import { Label } from '@/view/components/ui/label';
 import { Loader2, Save } from 'lucide-react';
 import { useSettingsViewModel } from '@/viewmodel/useSettingsViewModel';
+import { NivelEnsino } from '@/model/entities/BNCC';
 
 const SettingsScreen = () => {
     const { loading, saving, niveis, toggleNivel, handleSave } = useSettingsViewModel();
@@ -35,7 +36,7 @@ const SettingsScreen = () => {
                     <CardContent className="space-y-6">
                         <RadioGroup
                             value={niveis.length > 0 ? niveis[0] : ""}
-                            onValueChange={(value) => toggleNivel(value as any)}
+                            onValueChange={(value) => toggleNivel(value as NivelEnsino)}
                             className="space-y-4"
                         >
                             <div className="flex items-center space-x-2 border p-4 rounded-md">
