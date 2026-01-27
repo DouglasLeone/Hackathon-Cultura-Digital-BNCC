@@ -1,50 +1,164 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTour } from './TourProvider';
 import { Button } from '@/view/components/ui/button';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 
 export const GuidedTour: React.FC = () => {
-    const { isActive, currentStep, steps, nextStep, prevStep, endTour, targetRect } = useTour();
+    const { isActive, currentStep, steps, nextStep, prevStep, endTour, targetRect, isReady } = useTour();
+    const [tooltipCoords, setTooltipCoords] = useState({ top: 0, left: 0, arrowShift: 0 });
 
-    if (!isActive || !steps[currentStep]) return null;
+    const step = useMemo(() => steps?.[currentStep], [steps, currentStep]);
 
-    const step = steps[currentStep];
+    const TOOLTIP_WIDTH = 288; // w-72 = 18rem = 288px
+    const PADDING = 12;
 
-    // Calculate tooltip position
+    // Calculate position and adjust for viewport boundaries
+    useEffect(() => {
+        if (!isActive || !targetRect || !isReady || !step) return;
+
+        let top = 0;
+        let left = 0;
+        let arrowShift = 0;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Initial preferred position
+        switch (step.position) {
+            case 'top':
+                top = targetRect.top - PADDING;
+                left = targetRect.left + targetRect.width / 2;
+                break;
+            case 'bottom':
+                top = targetRect.bottom + PADDING;
+                left = targetRect.left + targetRect.width / 2;
+                break;
+            case 'left':
+                top = targetRect.top + targetRect.height / 2;
+                left = targetRect.left - PADDING;
+                break;
+            case 'right':
+                top = targetRect.top + targetRect.height / 2;
+                left = targetRect.right + PADDING;
+                break;
+        }
+
+        // Boundary adjustment (Horizontal)
+        if (step.position === 'top' || step.position === 'bottom') {
+            const minLeft = TOOLTIP_WIDTH / 2 + PADDING;
+            const maxLeft = viewportWidth - (TOOLTIP_WIDTH / 2 + PADDING);
+
+            if (left < minLeft) {
+                arrowShift = left - minLeft;
+                left = minLeft;
+            } else if (left > maxLeft) {
+                arrowShift = left - maxLeft;
+                left = maxLeft;
+            }
+        } else {
+            // position is left or right
+            if (step.position === 'right' && left + TOOLTIP_WIDTH > viewportWidth - PADDING) {
+                left = Math.max(PADDING + TOOLTIP_WIDTH / 2, viewportWidth - TOOLTIP_WIDTH - PADDING);
+            }
+        }
+
+        setTooltipCoords({ top, left, arrowShift });
+    }, [isActive, targetRect, isReady, step]);
+
     const getTooltipStyle = () => {
         if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
-        const padding = 12;
+        const { top, left } = tooltipCoords;
+        if (!step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+
         switch (step.position) {
             case 'top':
-                return {
-                    top: targetRect.top - padding,
-                    left: targetRect.left + targetRect.width / 2,
-                    transform: 'translate(-50%, -100%)'
-                };
+                return { top, left, transform: 'translate(-50%, -100%)' };
             case 'bottom':
-                return {
-                    top: targetRect.bottom + padding,
-                    left: targetRect.left + targetRect.width / 2,
-                    transform: 'translate(-50%, 0)'
-                };
+                return { top, left, transform: 'translate(-50%, 0)' };
             case 'left':
-                return {
-                    top: targetRect.top + targetRect.height / 2,
-                    left: targetRect.left - padding,
-                    transform: 'translate(-100%, -50%)'
-                };
+                return { top, left, transform: 'translate(-100%, -50%)' };
             case 'right':
-                return {
-                    top: targetRect.top + targetRect.height / 2,
-                    left: targetRect.right + padding,
-                    transform: 'translate(0, -50%)'
-                };
+                return { top: targetRect.top + targetRect.height / 2, left: Math.min(left, window.innerWidth - TOOLTIP_WIDTH - PADDING), transform: 'translate(0, -50%)' };
             default:
                 return {};
         }
     };
+
+    // Refined right-side positioning specifically for elements near the right edge
+    const finalStyle = useMemo(() => {
+        if (!isActive || !targetRect || !isReady || !step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+
+        const viewportWidth = window.innerWidth;
+        const pad = 16;
+
+        if (step.position === 'right') {
+            let left = targetRect.right + PADDING;
+            if (left + TOOLTIP_WIDTH > viewportWidth - pad) {
+                // Flip to left if no room on right
+                return {
+                    top: targetRect.top + targetRect.height / 2,
+                    left: targetRect.left - PADDING,
+                    transform: 'translate(-100%, -50%)',
+                    side: 'left'
+                };
+            }
+            return {
+                top: targetRect.top + targetRect.height / 2,
+                left: left,
+                transform: 'translate(0, -50%)',
+                side: 'right'
+            };
+        }
+
+        if (step.position === 'left') {
+            let left = targetRect.left - PADDING;
+            if (left - TOOLTIP_WIDTH < pad) {
+                // Flip to right if no room on left
+                return {
+                    top: targetRect.top + targetRect.height / 2,
+                    left: targetRect.right + PADDING,
+                    transform: 'translate(0, -50%)',
+                    side: 'right'
+                };
+            }
+            return {
+                top: targetRect.top + targetRect.height / 2,
+                left: left,
+                transform: 'translate(-100%, -50%)',
+                side: 'left'
+            };
+        }
+
+        // Handle top/bottom with horizontal shifting
+        if (step.position === 'top' || step.position === 'bottom') {
+            let left = targetRect.left + targetRect.width / 2;
+            let transformX = -50;
+
+            // Constrain left
+            const halfWidth = TOOLTIP_WIDTH / 2;
+            if (left - halfWidth < pad) {
+                left = pad;
+                transformX = 0;
+            } else if (left + halfWidth > viewportWidth - pad) {
+                left = viewportWidth - pad;
+                transformX = -100;
+            }
+
+            return {
+                top: step.position === 'top' ? targetRect.top - PADDING : targetRect.bottom + PADDING,
+                left: left,
+                transform: `translate(${transformX}%, ${step.position === 'top' ? '-100%' : '0'})`,
+                side: step.position,
+                arrowOffset: transformX === 0 ? (targetRect.left + targetRect.width / 2 - pad) : (transformX === -100 ? (targetRect.left + targetRect.width / 2 - (viewportWidth - pad)) : 0)
+            };
+        }
+
+        return getTooltipStyle();
+    }, [isActive, targetRect, isReady, step, window.innerWidth]);
+
+    if (!isActive || !steps || steps.length === 0 || !step) return null;
 
     return (
         <div className="fixed inset-0 z-[110] pointer-events-none">
@@ -53,7 +167,7 @@ export const GuidedTour: React.FC = () => {
                 <defs>
                     <mask id="spotlight-mask">
                         <rect width="100%" height="100%" fill="white" />
-                        {targetRect && (
+                        {isReady && targetRect && (
                             <motion.rect
                                 initial={false}
                                 animate={{
@@ -74,50 +188,66 @@ export const GuidedTour: React.FC = () => {
 
             {/* Tooltip */}
             <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                    style={getTooltipStyle()}
-                    className="absolute z-[120] w-72 bg-card border shadow-2xl rounded-2xl p-5 pointer-events-auto"
-                >
-                    <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-lg text-primary">{step.title}</h4>
-                        <Button variant="ghost" size="icon" onClick={endTour} className="h-6 w-6 -mr-2 -mt-2">
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                        {step.content}
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs font-medium text-muted-foreground">
-                            Passo {currentStep + 1} de {steps.length}
-                        </div>
-                        <div className="flex gap-2">
-                            {currentStep > 0 && (
-                                <Button variant="outline" size="sm" onClick={prevStep} className="h-8 px-2">
-                                    <ChevronLeft className="w-4 h-4" />
-                                </Button>
-                            )}
-                            <Button size="sm" onClick={nextStep} className="h-8 px-4 font-semibold">
-                                {currentStep === steps.length - 1 ? 'Finalizar' : 'Próximo'}
-                                {currentStep < steps.length - 1 && <ChevronRight className="ml-1 w-4 h-4" />}
+                {isReady ? (
+                    <motion.div
+                        key={currentStep}
+                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                        style={{
+                            position: 'absolute',
+                            top: finalStyle.top,
+                            left: finalStyle.left,
+                            transform: finalStyle.transform,
+                        }}
+                        className="z-[120] w-72 bg-card border shadow-2xl rounded-2xl p-5 pointer-events-auto"
+                    >
+                        <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-bold text-lg text-primary">{step.title}</h4>
+                            <Button variant="ghost" size="icon" onClick={endTour} className="h-6 w-6 -mr-2 -mt-2">
+                                <X className="w-4 h-4" />
                             </Button>
                         </div>
-                    </div>
+                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                            {step.content}
+                        </p>
+                        <div className="flex items-center justify-between">
+                            <div className="text-xs font-medium text-muted-foreground">
+                                Passo {currentStep + 1} de {steps.length}
+                            </div>
+                            <div className="flex gap-2">
+                                {currentStep > 0 && (
+                                    <Button variant="outline" size="sm" onClick={prevStep} className="h-8 px-2">
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </Button>
+                                )}
+                                <Button size="sm" onClick={nextStep} className="h-8 px-4 font-semibold text-white bg-primary hover:bg-primary/90">
+                                    {currentStep === steps.length - 1 ? 'Finalizar' : 'Próximo'}
+                                    {currentStep < steps.length - 1 && <ChevronRight className="ml-1 w-4 h-4" />}
+                                </Button>
+                            </div>
+                        </div>
 
-                    {/* Arrow */}
-                    <div
-                        className={`absolute w-3 h-3 bg-card border-t border-l rotate-45 
-              ${step.position === 'top' ? 'bottom-[-7px] left-1/2 -translate-x-1/2 border-t-0 border-l-0 border-r border-b' : ''}
-              ${step.position === 'bottom' ? 'top-[-7px] left-1/2 -translate-x-1/2' : ''}
-              ${step.position === 'left' ? 'right-[-7px] top-1/2 -translate-y-1/2 border-t-0 border-l-0 border-r border-b rotate-[-45deg]' : ''}
-              ${step.position === 'right' ? 'left-[-7px] top-1/2 -translate-y-1/2 border-t border-l rotate-[-45deg]' : ''}
-            `}
-                    />
-                </motion.div>
+                        {/* Arrow */}
+                        <div
+                            className={`absolute w-3 h-3 bg-card border-t border-l rotate-45 
+                                ${finalStyle.side === 'top' ? 'bottom-[-7px] border-t-0 border-l-0 border-r border-b' : ''}
+                                ${finalStyle.side === 'bottom' ? 'top-[-7px]' : ''}
+                                ${finalStyle.side === 'left' ? 'right-[-7px] top-1/2 -translate-y-1/2 border-t-0 border-l-0 border-r border-b rotate-[-45deg]' : ''}
+                                ${finalStyle.side === 'right' ? 'left-[-7px] top-1/2 -translate-y-1/2 border-t border-l rotate-[-45deg]' : ''}
+                            `}
+                            style={{
+                                left: (finalStyle.side === 'top' || finalStyle.side === 'bottom')
+                                    ? `calc(50% + ${finalStyle.arrowOffset || 0}px)`
+                                    : undefined
+                            }}
+                        />
+                    </motion.div>
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Loader2 className="w-10 h-10 text-white animate-spin" />
+                    </div>
+                )}
             </AnimatePresence>
         </div>
     );

@@ -13,6 +13,7 @@ import {
 import { Button } from '@/view/components/ui/button';
 import { Progress } from '@/view/components/ui/progress';
 import { TourStep, useTour } from './TourProvider';
+import { useDI } from '@/di/useDI';
 
 interface Step {
     title: string;
@@ -53,13 +54,15 @@ const TOUR_STEPS: TourStep[] = [
         target: "tour-sidebar-disciplinas",
         title: "Suas Disciplinas",
         content: "Aqui você gerencia todas as matérias que você leciona.",
-        position: "right"
+        position: "right",
+        path: "/"
     },
     {
         target: "tour-new-disciplina",
         title: "Criar Disciplina",
         content: "Clique aqui para cadastrar uma nova disciplina ou área de conhecimento.",
-        position: "bottom"
+        position: "bottom",
+        path: "/disciplinas"
     },
     {
         target: "tour-new-unidade",
@@ -113,7 +116,7 @@ export const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({ onComple
                     />
                 </AnimatePresence>
 
-                <div className="relative p-8 flex flex-col items-center text-center space-y-6">
+                <div className="relative z-10 p-8 flex flex-col items-center text-center space-y-6">
                     {/* Header */}
                     <div className="w-full flex justify-between items-center mb-4">
                         <Progress value={progress} className="h-1.5 w-full mr-4" />

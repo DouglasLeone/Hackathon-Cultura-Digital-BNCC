@@ -1,19 +1,27 @@
-
 import React from 'react';
-import { useOnboardingViewModel } from '../../../viewmodel/useOnboardingViewModel';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Loader2 } from 'lucide-react';
 
-export const OnboardingModal = () => {
-    const { showOnboarding, loading, niveis, toggleNivel, handleSaveLevels } = useOnboardingViewModel();
+interface OnboardingModalProps {
+    open: boolean;
+    loading: boolean;
+    niveis: string[];
+    toggleNivel: (level: string) => void;
+    onConfirm: () => void;
+}
 
-    if (!showOnboarding && !loading) return null;
-
+export const OnboardingModal = ({
+    open,
+    loading,
+    niveis,
+    toggleNivel,
+    onConfirm
+}: OnboardingModalProps) => {
     return (
-        <Dialog open={showOnboarding}>
+        <Dialog open={open}>
             <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle>Bem-vindo à Aula Criativa AI</DialogTitle>
@@ -47,7 +55,7 @@ export const OnboardingModal = () => {
                     </p>
                 </div>
                 <DialogFooter>
-                    <Button onClick={handleSaveLevels} disabled={niveis.length === 0 || loading}>
+                    <Button onClick={onConfirm} disabled={niveis.length === 0 || loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Confirmar e Continuar
                     </Button>
