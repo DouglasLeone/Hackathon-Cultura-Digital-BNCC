@@ -118,6 +118,7 @@ export interface AtividadeAvaliativa {
   tipo: string;
   instrucoes: string;
   questoes: Questao[];
+  conteudo?: string; // For the full rich text content
   criterios_avaliacao?: string;
   pontuacao_total: number;
   habilidades_possiveis?: HabilidadeBNCC[];

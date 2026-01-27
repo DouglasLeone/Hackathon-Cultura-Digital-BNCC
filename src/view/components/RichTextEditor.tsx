@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -6,13 +6,15 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import { TextStyle } from '@tiptap/extension-text-style';
 import {
     Bold, Italic, Strikethrough, Code, List, ListOrdered,
     Heading1, Heading2, Heading3, Quote, Undo, Redo,
-    Link as LinkIcon, Underline as UnderlineIcon, ListTodo
+    Link as LinkIcon, Underline as UnderlineIcon, ListTodo, Type
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
+import { FontSize } from './extensions/FontSize';
 
 interface RichTextEditorProps {
     content: string;
@@ -37,6 +39,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 },
             }),
             Underline,
+            TextStyle,
+            FontSize,
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
@@ -178,6 +182,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     >
                         <Heading3 className="h-4 w-4" />
                     </MenuButton>
+                </div>
+
+                {/* Font Size Selector */}
+                <div className="flex gap-1 border-r pr-2 items-center">
+                    <Type className="h-4 w-4 text-muted-foreground" />
+                    <select
+                        className="h-8 text-sm border rounded px-2 bg-background"
+                        onChange={(e) => {
+                            const size = e.target.value;
+                            if (size === 'normal') {
+                                editor.chain().focus().unsetFontSize().run();
+                            } else {
+                                editor.chain().focus().setFontSize(size).run();
+                            }
+                        }}
+                        title="Tamanho do texto"
+                    >
+                        <option value="normal">Normal</option>
+                        <option value="14px">Pequeno</option>
+                        <option value="18px">Médio</option>
+                        <option value="24px">Grande</option>
+                        <option value="32px">Muito Grande</option>
+                    </select>
                 </div>
 
                 <div className="flex gap-1 border-r pr-2">

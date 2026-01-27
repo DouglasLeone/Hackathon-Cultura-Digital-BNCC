@@ -315,7 +315,7 @@ const UnidadeDetailScreen = () => {
                                             </div>
                                             <ContentEditor
                                                 title={unidade.atividade_avaliativa.titulo}
-                                                initialContent={formatActivityContent(unidade.atividade_avaliativa.questoes)}
+                                                initialContent={unidade.atividade_avaliativa.conteudo || formatActivityContent(unidade.atividade_avaliativa.questoes)}
                                                 onSave={async (content) => {
                                                     try {
                                                         await updateAtividade(content);
