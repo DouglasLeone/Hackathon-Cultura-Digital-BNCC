@@ -1,6 +1,12 @@
 import { jsPDF } from 'jspdf';
 import { PlanoAula, AtividadeAvaliativa } from '@/model/entities';
 
+interface TOCItem {
+    title: string;
+    page: number;
+    y: number;
+}
+
 export class PDFService {
     private static readonly MARGIN_X = 24;
     private static readonly MARGIN_Y = 24;
@@ -9,52 +15,70 @@ export class PDFService {
     private static readonly PAGE_WIDTH = 210;
     private static readonly CONTENT_WIDTH = 162; // 210 - 24*2
 
-    // Notion Colors
     private static readonly COLORS = {
         TEXT: '#37352f',
         GRAY: '#787774',
         BG_GRAY: '#f1f1ef',
         BORDER_GRAY: '#e0e0e0',
-        BLUE: '#2e86de'
+        ACCENT: '#2e86de'
     };
 
     private static currentY: number = 0;
     private static currentX: number = 0;
+    private static tocItems: TOCItem[] = [];
 
-    static generateLessonPlanPDF(plano: PlanoAula, disciplina: string = 'Disciplina', tema: string = 'Tema'): void {
+    static generateLessonPlanPDF(plano: PlanoAula, disciplina: string = 'Disciplina', tema: string = 'Tema', schoolName: string = 'Escola Exemplar'): void {
         const doc = new jsPDF();
+        this.resetState();
         this.setupDocument(doc);
 
-        // Metadata as "Properties" at top
-        this.renderNotionHeader(doc, plano.titulo);
+        // 1. Title Page & Properties
+        this.renderNotionHeader(doc, plano.titulo, schoolName);
         this.renderProperties(doc, [
             { label: 'Disciplina', value: disciplina },
             { label: 'Tema', value: tema },
-            { label: 'Gerado em', value: new Date().toLocaleDateString('pt-BR') }
+            { label: 'Data', value: new Date().toLocaleDateString('pt-BR') }
         ]);
 
         this.newLine(doc, 10);
+
+        // 2. Reserve TOC Page (if content is long enough reasonably, but let's always add it for structure)
+        const tocPageNumber = doc.getNumberOfPages() + 1;
+        doc.addPage(); // Page 2
+        this.currentY = this.MARGIN_Y;
+        // We will render TOC content here LATER
+
+        // 3. Render Content (Start on Page 3 to be clean)
+        doc.addPage(); // Page 3
+        this.currentY = this.MARGIN_Y;
+
         this.renderSmartContent(doc, plano.conteudo || '');
-        this.addFooter(doc);
+
+        // 4. Go back and Render TOC
+        this.renderTOC(doc, tocPageNumber);
+
+        // 5. Global Polish (Footers)
+        this.addFooter(doc, schoolName);
+
         doc.save(`${this.sanitizeFilename(plano.titulo)}.pdf`);
     }
 
-    static generateActivityPDF(atividade: AtividadeAvaliativa, disciplina: string = 'Disciplina', tema: string = 'Tema'): void {
+    static generateActivityPDF(atividade: AtividadeAvaliativa, disciplina: string = 'Disciplina', tema: string = 'Tema', schoolName: string = 'Escola Exemplar'): void {
         const doc = new jsPDF();
+        this.resetState();
         this.setupDocument(doc);
 
-        this.renderNotionHeader(doc, atividade.titulo);
+        this.renderNotionHeader(doc, atividade.titulo, schoolName);
         this.renderProperties(doc, [
             { label: 'Disciplina', value: disciplina },
             { label: 'Tipo', value: atividade.tipo }
         ]);
 
-        this.newLine(doc, 10);
+        this.newLine(doc, 14);
 
         if (atividade.conteudo) {
             this.renderSmartContent(doc, atividade.conteudo);
         } else {
-            // Default logical rendering if no generated content
             this.renderCallout(doc, atividade.instrucoes, "💡");
             this.newLine(doc, 8);
 
@@ -79,7 +103,6 @@ export class PDFService {
                 } else if (q.tipo === 'verdadeiro_falso') {
                     this.renderBullet(doc, "( ) Verdadeiro  ( ) Falso", 8, '');
                 } else {
-                    // Lines for answer
                     this.newLine(doc, 4);
                     doc.setDrawColor(this.COLORS.BORDER_GRAY);
                     doc.line(this.currentX, this.currentY, this.currentX + this.CONTENT_WIDTH, this.currentY);
@@ -89,18 +112,72 @@ export class PDFService {
                 }
             });
         }
-        this.addFooter(doc);
+        this.addFooter(doc, schoolName);
         doc.save(`${this.sanitizeFilename(atividade.titulo)}.pdf`);
+    }
+
+    private static resetState(): void {
+        this.tocItems = [];
+        this.currentY = this.MARGIN_Y;
     }
 
     private static setupDocument(doc: jsPDF): void {
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(this.COLORS.TEXT);
-        this.currentY = this.MARGIN_Y;
-        this.currentX = this.MARGIN_X;
     }
 
-    private static renderNotionHeader(doc: jsPDF, title: string): void {
+    private static renderTOC(doc: jsPDF, pageNum: number): void {
+        doc.setPage(pageNum);
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(this.COLORS.TEXT);
+        doc.text("Sumário", this.MARGIN_X, this.MARGIN_Y);
+
+        let y = this.MARGIN_Y + 15;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+
+        if (this.tocItems.length === 0) {
+            doc.setTextColor(this.COLORS.GRAY);
+            doc.text("Nenhum item indexado.", this.MARGIN_X, y);
+            return;
+        }
+
+        this.tocItems.forEach(item => {
+            const pageStr = `${item.page}`;
+
+            // Draw Dots
+            const titleWidth = doc.getTextWidth(item.title);
+            const numWidth = doc.getTextWidth(pageStr);
+            const dotsWidth = this.CONTENT_WIDTH - titleWidth - numWidth - 5;
+
+            doc.setTextColor(this.COLORS.ACCENT); // Link color
+            doc.text(item.title, this.MARGIN_X, y);
+
+            doc.setTextColor(this.COLORS.BORDER_GRAY);
+            if (dotsWidth > 0) {
+                doc.text(".".repeat(Math.floor(dotsWidth / 2)), this.MARGIN_X + titleWidth + 2, y);
+            }
+
+            doc.setTextColor(this.COLORS.TEXT);
+            doc.text(pageStr, this.MARGIN_X + this.CONTENT_WIDTH - numWidth, y);
+
+            // Link is clickable in PDF
+            doc.link(this.MARGIN_X, y - 5, this.CONTENT_WIDTH, 7, { pageNumber: item.page, top: item.y });
+
+            y += 8;
+        });
+    }
+
+    private static renderNotionHeader(doc: jsPDF, title: string, subtitle: string = ''): void {
+        // Branding Hint (Top Right)
+        if (subtitle) {
+            doc.setFontSize(9);
+            doc.setTextColor(this.COLORS.GRAY);
+            doc.text(subtitle.toUpperCase(), this.PAGE_WIDTH - this.MARGIN_X, this.MARGIN_Y, { align: 'right' });
+        }
+
         // Notion Page Icon Style
         doc.setFillColor(this.COLORS.BG_GRAY);
         doc.roundedRect(this.MARGIN_X, this.currentY, 20, 20, 2, 2, 'F');
@@ -158,18 +235,9 @@ export class PDFService {
                 if (/^\|[-:\s|]+\|$/.test(line)) {
                     continue; // Skip separator line
                 }
-
-                const row = line.split('|')
-                    .map(cell => cell.trim())
-                    .filter((val, idx, arr) => idx > 0 && idx < arr.length - 1);
-
-                // Fallback for edge cases
-                if (row.length === 0 && line.length > 2) {
-                    const altRow = line.substring(1, line.length - 1).split('|').map(c => c.trim());
-                    tableRows.push(altRow);
-                } else {
-                    tableRows.push(row);
-                }
+                const row = line.split('|').map(cell => cell.trim()).filter((val, idx, arr) => idx > 0 && idx < arr.length - 1);
+                if (row.length === 0 && line.length > 2) tableRows.push(line.substring(1, line.length - 1).split('|').map(c => c.trim()));
+                else tableRows.push(row);
 
                 if (i + 1 >= lines.length || !lines[i + 1].trim().startsWith('|')) {
                     this.renderTable(doc, tableRows);
@@ -178,15 +246,19 @@ export class PDFService {
                 continue;
             }
 
-            // Headers
+            // Headers & TOC Tracking
             if (line.startsWith('# ')) {
                 this.newLine(doc, 8);
-                this.renderHeader(doc, line.substring(2), 20);
+                const text = line.substring(2);
+                this.renderHeader(doc, text, 20);
+                this.addToTOC(doc, text);
                 continue;
             }
             if (line.startsWith('## ')) {
                 this.newLine(doc, 6);
-                this.renderHeader(doc, line.substring(3), 16);
+                const text = line.substring(3);
+                this.renderHeader(doc, text, 16);
+                this.addToTOC(doc, text);
                 continue;
             }
             if (line.startsWith('### ')) {
@@ -195,7 +267,7 @@ export class PDFService {
                 continue;
             }
 
-            // Blockquote / Callout
+            // Blockquotes
             if (line.startsWith('> ')) {
                 let calloutText = line.substring(2);
                 while (i + 1 < lines.length && lines[i + 1].trim().startsWith('> ')) {
@@ -217,7 +289,7 @@ export class PDFService {
                 continue;
             }
 
-            // Bold Paragraph
+            // Paragraphs
             if (line.startsWith('**') && line.endsWith('**')) {
                 this.addRichParagraph(doc, line.replace(/\*\*/g, ''), 11, 'bold');
             } else {
@@ -227,27 +299,31 @@ export class PDFService {
         }
     }
 
+    private static addToTOC(doc: jsPDF, title: string): void {
+        this.tocItems.push({
+            title: title,
+            page: doc.getCurrentPageInfo().pageNumber,
+            y: this.currentY
+        });
+    }
+
     private static renderTable(doc: jsPDF, rows: string[][]): void {
         if (rows.length === 0) return;
-
         const colCount = rows[0].length;
         const colWidth = this.CONTENT_WIDTH / colCount;
         const padding = 2;
 
         rows.forEach((row, rowIndex) => {
-            // 1. Pre-calculate height
             let maxCellHeight = 0;
             const processedCells = row.map(cell => {
                 const cellLines = doc.splitTextToSize(cell, colWidth - (padding * 2));
-                const h = (cellLines.length * 6) + (padding * 2); // 6 lineHeight for table
+                const h = (cellLines.length * 6) + (padding * 2);
                 if (h > maxCellHeight) maxCellHeight = h;
                 return cellLines;
             });
 
-            // 2. Check Break
             this.currentY = this.checkPageBreak(doc, this.currentY, maxCellHeight);
 
-            // 3. Header BG
             if (rowIndex === 0) {
                 doc.setFillColor(this.COLORS.BG_GRAY);
                 doc.rect(this.MARGIN_X, this.currentY, this.CONTENT_WIDTH, maxCellHeight, 'F');
@@ -256,7 +332,6 @@ export class PDFService {
                 doc.setFont('helvetica', 'normal');
             }
 
-            // 4. Render
             let currentX = this.MARGIN_X;
             doc.setDrawColor(this.COLORS.BORDER_GRAY);
             doc.setTextColor(this.COLORS.TEXT);
@@ -264,8 +339,7 @@ export class PDFService {
 
             row.forEach((_, colIndex) => {
                 doc.rect(currentX, this.currentY, colWidth, maxCellHeight);
-                const lines = processedCells[colIndex];
-                doc.text(lines, currentX + padding, this.currentY + padding + 4);
+                doc.text(processedCells[colIndex], currentX + padding, this.currentY + padding + 4);
                 currentX += colWidth;
             });
 
@@ -362,13 +436,15 @@ export class PDFService {
         return y;
     }
 
-    private static addFooter(doc: jsPDF): void {
+    private static addFooter(doc: jsPDF, schoolName: string = ''): void {
         const total = doc.getNumberOfPages();
         for (let i = 1; i <= total; i++) {
             doc.setPage(i);
             doc.setFontSize(9);
             doc.setTextColor(this.COLORS.GRAY);
-            doc.text(`Página ${i} de ${total}`, this.PAGE_WIDTH / 2, this.PAGE_HEIGHT - 10, { align: 'center' });
+
+            const text = `Aula Criativa AI${schoolName ? ` | ${schoolName}` : ''} - Página ${i} de ${total}`;
+            doc.text(text, this.PAGE_WIDTH / 2, this.PAGE_HEIGHT - 10, { align: 'center' });
         }
     }
 
