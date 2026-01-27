@@ -69,6 +69,8 @@ export interface SlideContent {
   titulo: string;
   conteudo: string[];
   anotacoes?: string;
+  roteiro_professor?: string;
+  imagem_sugerida?: string;
 }
 
 export interface MaterialSlides {
