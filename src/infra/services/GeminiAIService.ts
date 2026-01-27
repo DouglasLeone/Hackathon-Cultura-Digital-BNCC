@@ -339,26 +339,34 @@ export class GeminiAIService implements IAIService {
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
         const prompt = `
-        Contexto: Apresentação de slides para uma aula sobre "${unidade.tema}".
+        Aja como um designer instrucional e especialista em apresentações educacionais.
+        Crie uma apresentação de slides profissional e engajadora sobre: "${unidade.tema}".
         Disciplina: ${unidade.disciplina?.nome || "Geral"}.
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
         
         Baseie-se nestas habilidades BNCC:
         ${bnccContext}
         
-        Tarefa: Crie o conteúdo para uma apresentação de 5 a 8 slides.
-        
-        Formato de Resposta (JSON Array de Objetos):
+        O tom deve ser educativo, claro e inspirador. Foco no engajamento dos alunos.
+
+        Estruture a resposta estritamente como um ARRAY JSON onde cada objeto é um slide.
+        Cada slide deve ter:
+        - "titulo": Título curto e impactante (max 8 palavras).
+        - "conteudo": Array de strings com os pontos chave (max 5 pontos, curtos e diretos).
+        - "imagem_sugerida": Descrição detalhada para uma imagem ou ícone que ilustraria esse slide (para IA geradora de imagem).
+        - "roteiro_professor": Texto explicativo para o professor falar durante esse slide (dicas didáticas, perguntas para a turma, aprofundamento).
+
+        Gere entre 5 a 8 slides cobrindo: Abertura (Capa), Objetivos (com codigos BNCC), Conceitos Chave, Exemplos Práticos, Atividade Interativa e Conclusão/Referências.
+
+        Exemplo de formato:
         [
             {
-                "titulo": "Título do Slide (ex: Introdução, Conceito X, Conclusão)",
-                "conteudo": ["Tópico 1 (curto)", "Tópico 2"],
-                "anotacoes": "Sugestão de fala para o professor explicar este slide."
+                "titulo": "O Ciclo da Água",
+                "conteudo": ["Evaporação dos oceanos", "Condensação nas nuvens", "Precipitação (chuva)"],
+                "imagem_sugerida": "Diagrama esquemático colorido mostrando o sol aquecendo o oceano e setas subindo.",
+                "roteiro_professor": "Comece perguntando: 'Para onde vai a água da chuva?' Explique que a água está em constante movimento."
             }
         ]
-        
-        Garanta que o primeiro slide seja a Capa e o último as Referências/Encerramento.
-        Mencione os códigos BNCC (${codigosBNCC}) em algum slide pertinente (ex: Objetivos).
         `;
 
         try {
