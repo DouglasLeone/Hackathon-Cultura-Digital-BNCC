@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Edit, Save, Download, X } from 'lucide-react';
 import { useToast } from './ui/use-toast';
 import { RichTextEditor } from './RichTextEditor';
+import { MarkdownViewer } from './MarkdownViewer';
 
 interface ContentEditorProps {
     title: string;
@@ -14,6 +15,14 @@ interface ContentEditorProps {
     hideTitle?: boolean;
     useRichEditor?: boolean; // New prop to enable rich text editor
 }
+
+// Helper to detect if content is Markdown vs HTML
+const isMarkdown = (content: string): boolean => {
+    // Simple heuristic: if it doesn't start with HTML tags and contains markdown patterns
+    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+    const hasMarkdown = /^#{1,6}\s|^\*\*|^-\s|^\d+\.\s|^\>|```/m.test(content);
+    return !hasHtmlTags && hasMarkdown;
+};
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
     title,
@@ -29,6 +38,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     const [content, setContent] = useState(initialContent);
     const [saving, setSaving] = useState(false);
     const { toast } = useToast();
+
+    // Detect if current content is markdown
+    const contentIsMarkdown = isMarkdown(content);
 
     // Reset content if initialContent changes (e.g. switching items)
     useEffect(() => {
@@ -104,27 +116,48 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 </div>
             </div>
 
-            {useRichEditor ? (
-                <RichTextEditor
-                    content={content}
-                    onChange={setContent}
-                    editable={isEditing}
-                    className="flex-1"
-                />
+            {/* Content Display/Editor */}
+            {isEditing ? (
+                // When editing, use textarea for Markdown or RichEditor for HTML
+                contentIsMarkdown ? (
+                    <textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4 border rounded-md w-full"
+                        placeholder="Digite o conteúdo em Markdown..."
+                    />
+                ) : useRichEditor ? (
+                    <RichTextEditor
+                        content={content}
+                        onChange={setContent}
+                        editable={true}
+                        className="flex-1"
+                    />
+                ) : (
+                    <textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4 border rounded-md"
+                    />
+                )
             ) : (
-                <>
-                    {isEditing ? (
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="flex-1 min-h-[400px] font-mono text-sm leading-relaxed resize-none p-4 border rounded-md"
-                        />
-                    ) : (
-                        <div className="prose max-w-none text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto p-1">
-                            {content}
-                        </div>
-                    )}
-                </>
+                // When viewing, render Markdown beautifully or use RichEditor for HTML
+                contentIsMarkdown ? (
+                    <div className="flex-1 overflow-y-auto max-h-[600px]">
+                        <MarkdownViewer content={content} />
+                    </div>
+                ) : useRichEditor ? (
+                    <RichTextEditor
+                        content={content}
+                        onChange={setContent}
+                        editable={false}
+                        className="flex-1"
+                    />
+                ) : (
+                    <div className="prose max-w-none text-gray-700 whitespace-pre-wrap flex-1 overflow-y-auto p-1">
+                        {content}
+                    </div>
+                )
             )}
         </div>
     );
