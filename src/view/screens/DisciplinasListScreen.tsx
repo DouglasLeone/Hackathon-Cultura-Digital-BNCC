@@ -30,7 +30,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/view/components/ui/breadcrumb";
-import { SERIES_OPTIONS, Disciplina, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '@/model/entities';
+import { SERIES_OPTIONS, Disciplina, SERIES_FUNDAMENTAL, SERIES_MEDIO, AREAS_CONHECIMENTO_FUNDAMENTAL, AREAS_CONHECIMENTO_MEDIO } from '@/model/entities';
 import { EmptyState } from '@/view/components/ui/empty-state';
 import { DisciplinaCardSkeleton } from '@/view/components/disciplinas/DisciplinaCardSkeleton';
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,14 +49,27 @@ const DisciplinasListScreen = () => {
     const [selectedNivel, setSelectedNivel] = useState<string>('all');
     const [selectedSerie, setSelectedSerie] = useState<string>('all');
 
-    useEffect(() => {
-        // ... (existing context effect)
-    }, []);
-
     // If we have a URL area, it takes precedence. Otherwise use the local filter.
     const activeFilter = urlArea || selectedArea;
 
     const { disciplinas, loading, refresh, deleteDisciplina, userLevels } = useDisciplinasListViewModel(activeFilter, selectedSerie, selectedNivel);
+
+    useEffect(() => {
+        if (!userLevels || userLevels.length === 0) {
+            setFilteredAreas([]);
+            return;
+        }
+
+        const level = userLevels[0]; // Assuming single context for now as per current rule
+        if (level === 'Ensino Fundamental') {
+            setFilteredAreas([...AREAS_CONHECIMENTO_FUNDAMENTAL]);
+        } else if (level === 'Ensino Médio') {
+            setFilteredAreas([...AREAS_CONHECIMENTO_MEDIO]);
+        } else {
+            setFilteredAreas([]);
+        }
+
+    }, [userLevels]);
 
     // Determine Filter Visibility & Options based on Context
     const hasSingleContext = userLevels && userLevels.length === 1;
