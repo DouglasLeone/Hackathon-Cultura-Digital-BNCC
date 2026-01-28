@@ -151,23 +151,13 @@ const DisciplinasListScreen = () => {
                         {/* Area Filter (Only if not in URL) */}
                         {!urlArea && (
                             <div className="flex items-center gap-2 w-full sm:w-auto">
-                                {selectedArea && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => setSelectedArea(undefined)}
-                                        title="Limpar filtro de Área"
-                                        className="shrink-0"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </Button>
-                                )}
-                                <Select value={selectedArea} onValueChange={setSelectedArea}>
+                                <Select value={selectedArea || "all"} onValueChange={(val) => val === "all" ? setSelectedArea(undefined) : setSelectedArea(val)}>
                                     <SelectTrigger className="w-full sm:w-[200px]">
                                         <Filter className="w-4 h-4 mr-2" />
                                         <SelectValue placeholder="Filtrar por Área" />
                                     </SelectTrigger>
                                     <SelectContent>
+                                        <SelectItem value="all">Todas</SelectItem>
                                         {filteredAreas.map((area) => (
                                             <SelectItem key={area} value={area}>
                                                 {area}
