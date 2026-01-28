@@ -49,11 +49,43 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [isActive, currentStep, steps]);
 
+    // Tour control functions
+    const endTour = useCallback(() => {
+        setIsActive(false);
+        setTargetRect(null);
+        setIsReady(false);
+    }, []);
+
+    const nextStep = useCallback(() => {
+        if (currentStep < steps.length - 1) {
+            setIsReady(false);
+            setCurrentStep(prev => prev + 1);
+        } else {
+            endTour();
+        }
+    }, [currentStep, steps.length, endTour]);
+
+    const prevStep = useCallback(() => {
+        if (currentStep > 0) {
+            setIsReady(false);
+            setCurrentStep(prev => prev - 1);
+        }
+    }, [currentStep]);
+
+    const startTour = useCallback((newSteps: TourStep[]) => {
+        setSteps(newSteps);
+        setCurrentStep(0);
+        setIsActive(true);
+        setIsReady(false);
+    }, []);
+
     // Handle navigation and element waiting
     useEffect(() => {
         if (!isActive || !steps[currentStep]) return;
 
         const step = steps[currentStep];
+        let pollTimer: ReturnType<typeof setInterval> | null = null;
+        let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
         const checkElement = () => {
             const element = document.querySelector(`[data-tour="${step.target}"]`) ||
@@ -65,24 +97,47 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return false;
         };
 
+        const startPolling = () => {
+            // Try to find element with polling (check every 500ms)
+            pollTimer = setInterval(() => {
+                if (checkElement() && pollTimer) {
+                    clearInterval(pollTimer);
+                    if (timeoutTimer) clearTimeout(timeoutTimer);
+                }
+            }, 500);
+
+            // Timeout after 10 seconds - skip to next step if element not found
+            timeoutTimer = setTimeout(() => {
+                if (pollTimer) clearInterval(pollTimer);
+                console.warn(`Tour step ${currentStep} timed out - element "${step.target}" not found`);
+
+                // Auto-skip to next step or end tour
+                if (currentStep < steps.length - 1) {
+                    setIsReady(false);
+                    setCurrentStep(prev => prev + 1);
+                } else {
+                    endTour();
+                }
+            }, 10000);
+        };
+
         if (step.path && window.location.pathname !== step.path) {
             setIsReady(false);
             navigate(step.path);
             // Wait for navigation and potential lazy loading
-            const timer = setInterval(() => {
-                if (checkElement()) clearInterval(timer);
-            }, 500);
-            return () => clearInterval(timer);
+            startPolling();
         } else {
             if (!checkElement()) {
-                // If not found immediately, start observing or polling
-                const timer = setInterval(() => {
-                    if (checkElement()) clearInterval(timer);
-                }, 500);
-                return () => clearInterval(timer);
+                // If not found immediately, start polling with timeout
+                startPolling();
             }
         }
-    }, [isActive, currentStep, steps, navigate, updateTargetRect]);
+
+        return () => {
+            if (pollTimer) clearInterval(pollTimer);
+            if (timeoutTimer) clearTimeout(timeoutTimer);
+        };
+    }, [isActive, currentStep, steps, navigate, updateTargetRect, endTour]);
 
     useEffect(() => {
         window.addEventListener('resize', updateTargetRect);
@@ -93,34 +148,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [updateTargetRect]);
 
-    const startTour = (newSteps: TourStep[]) => {
-        setSteps(newSteps);
-        setCurrentStep(0);
-        setIsActive(true);
-        setIsReady(false);
-    };
-
-    const nextStep = () => {
-        if (currentStep < steps.length - 1) {
-            setIsReady(false);
-            setCurrentStep(prev => prev + 1);
-        } else {
-            endTour();
-        }
-    };
-
-    const prevStep = () => {
-        if (currentStep > 0) {
-            setIsReady(false);
-            setCurrentStep(prev => prev - 1);
-        }
-    };
-
-    const endTour = () => {
-        setIsActive(false);
-        setTargetRect(null);
-        setIsReady(false);
-    };
+    // Functions already moved above useEffect for proper ordering
 
     return (
         <TourContext.Provider value={{
