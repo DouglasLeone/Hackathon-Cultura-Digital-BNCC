@@ -23,19 +23,22 @@ export class GeneratePlanoAulaUseCase {
             context = await this.userRepository.getUserContext(userId) || undefined;
         }
 
-        let habilidadesBNCC: HabilidadeBNCC[] = [];
-        if (unidade.disciplina) {
-            habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
+        if (!unidade.disciplina) {
+            throw new Error('Unidade deve ter uma disciplina associada para gerar plano de aula.');
         }
 
-        const enrichedContext = await this.enrichThemeUseCase.execute(unidade.tema, unidade.disciplina!, habilidadesBNCC);
+        const habilidadesBNCC: HabilidadeBNCC[] = this.bnccRepository.findByContext(unidade.disciplina, unidade);
 
-        const generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context, enrichedContext);
+        const enrichedContext = await this.enrichThemeUseCase.execute(unidade.tema, unidade.disciplina, habilidadesBNCC);
+
+        let generatedPlano = await this.aiService.generatePlanoAula(unidade, habilidadesBNCC, context, enrichedContext);
 
         // Validate AI response structure
         const validationResult = PlanoAulaSchema.safeParse(generatedPlano);
         if (!validationResult.success) {
             console.warn('⚠️ AI response validation failed:', validationResult.error.errors);
+            // Fallback to empty to ensure defaults are applied
+            generatedPlano = {};
         }
 
         // ✨ Perform Pedagogical Quality Check
