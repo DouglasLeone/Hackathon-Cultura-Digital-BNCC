@@ -13,7 +13,7 @@ export class GenerateAtividadeUseCase {
         private bnccRepository: BNCCRepository
     ) { }
 
-    async execute(unidade: Unidade, userId?: string) {
+    async execute(unidade: Unidade, userId?: string, options?: import('../model/services/IAIService').ActivityGenerationOptions) {
         let context;
         if (userId) {
             context = await this.userRepository.getUserContext(userId) || undefined;
@@ -24,7 +24,15 @@ export class GenerateAtividadeUseCase {
             habilidadesBNCC = this.bnccRepository.findByContext(unidade.disciplina, unidade);
         }
 
-        const generatedAtividade = await this.aiService.generateAtividade(unidade, habilidadesBNCC, context);
+        const defaultOptions: import('../model/services/IAIService').ActivityGenerationOptions = {
+            objectiveCount: 3,
+            subjectiveCount: 2,
+            difficulty: 'Médio'
+        };
+
+        const finalOptions = options || defaultOptions;
+
+        const generatedAtividade = await this.aiService.generateAtividade(unidade, habilidadesBNCC, finalOptions, context);
 
         // Validate AI response
         const validationResult = AtividadeSchema.safeParse(generatedAtividade);

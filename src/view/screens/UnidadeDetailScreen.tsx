@@ -31,6 +31,7 @@ import {
 import { Questao } from '@/model/entities';
 import { QualityBadge } from '@/view/components/ui/quality-badge';
 import { QualityIssue } from '@/usecase/ValidatePedagogicalQualityUseCase';
+import { ActivityGenerationOptionsDialog } from '@/view/components/ActivityGenerationOptionsDialog';
 
 const formatActivityContent = (questions: Questao[]): string => {
     if (!questions || !Array.isArray(questions)) return '';
@@ -72,6 +73,7 @@ const UnidadeDetailScreen = () => {
     } = useUnidadeDetailViewModel(unidadeId || '');
 
     const [isDescExpanded, setIsDescExpanded] = React.useState(false);
+    const [showActivityOptions, setShowActivityOptions] = React.useState(false);
 
     if (loading) {
         return <AppLayout><div>Carregando...</div></AppLayout>;
@@ -340,7 +342,7 @@ const UnidadeDetailScreen = () => {
                                 <div className="pt-4">
                                     <p className="text-sm text-muted-foreground mb-4">Nenhuma atividade gerada.</p>
                                     <Button
-                                        onClick={generateAtividade}
+                                        onClick={() => setShowActivityOptions(true)}
                                         disabled={generating === 'atividade'}
                                         className="w-full"
                                     >
@@ -418,6 +420,13 @@ const UnidadeDetailScreen = () => {
                         </CardContent>
                     </Card>
                 </div>
+
+                <ActivityGenerationOptionsDialog
+                    open={showActivityOptions}
+                    onOpenChange={setShowActivityOptions}
+                    onGenerate={generateAtividade}
+                    loading={generating === 'atividade'}
+                />
 
             </div>
         </AppLayout >
