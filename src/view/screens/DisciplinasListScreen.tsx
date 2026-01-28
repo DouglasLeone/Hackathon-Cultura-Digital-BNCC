@@ -30,7 +30,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/view/components/ui/breadcrumb";
-import { SERIES_OPTIONS, Disciplina } from '@/model/entities';
+import { SERIES_OPTIONS, Disciplina, SERIES_FUNDAMENTAL, SERIES_MEDIO } from '@/model/entities';
 import { EmptyState } from '@/view/components/ui/empty-state';
 import { DisciplinaCardSkeleton } from '@/view/components/disciplinas/DisciplinaCardSkeleton';
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,7 +56,23 @@ const DisciplinasListScreen = () => {
     // If we have a URL area, it takes precedence. Otherwise use the local filter.
     const activeFilter = urlArea || selectedArea;
 
-    const { disciplinas, loading, refresh, deleteDisciplina } = useDisciplinasListViewModel(activeFilter, selectedSerie, selectedNivel);
+    const { disciplinas, loading, refresh, deleteDisciplina, userLevels } = useDisciplinasListViewModel(activeFilter, selectedSerie, selectedNivel);
+
+    // Determine Filter Visibility & Options based on Context
+    const hasSingleContext = userLevels && userLevels.length === 1;
+    const contextNivel = hasSingleContext ? userLevels[0] : null;
+
+    // 1. Should we show Nivel Filter? 
+    // Only show if we are NOT loading AND we strictly know the user has filtered nothing (no context).
+    const showNivelFilter = !loading && userLevels.length === 0;
+
+    // 2. Which Series options to show?
+    let availableSeries: readonly string[] = SERIES_OPTIONS;
+    if (contextNivel === 'Ensino Fundamental') {
+        availableSeries = SERIES_FUNDAMENTAL;
+    } else if (contextNivel === 'Ensino Médio') {
+        availableSeries = SERIES_MEDIO;
+    }
     const formViewModel = useDisciplinaFormViewModel({
         onSuccess: () => {
             setIsCreateOpen(false);
@@ -150,17 +166,19 @@ const DisciplinasListScreen = () => {
                         )}
 
                         <div className="flex gap-2 w-full sm:w-auto">
-                            {/* Nivel Filter */}
-                            <Select value={selectedNivel} onValueChange={setSelectedNivel}>
-                                <SelectTrigger className="w-full sm:w-[160px]">
-                                    <SelectValue placeholder="Nível" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Todos os Níveis</SelectItem>
-                                    <SelectItem value="Ensino Fundamental">Fundamental</SelectItem>
-                                    <SelectItem value="Ensino Médio">Médio</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            {/* Nivel Filter - Conditional */}
+                            {showNivelFilter && (
+                                <Select value={selectedNivel} onValueChange={setSelectedNivel}>
+                                    <SelectTrigger className="w-full sm:w-[160px]">
+                                        <SelectValue placeholder="Nível" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos os Níveis</SelectItem>
+                                        <SelectItem value="Ensino Fundamental">Fundamental</SelectItem>
+                                        <SelectItem value="Ensino Médio">Médio</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
 
                             {/* Serie Filter */}
                             <Select value={selectedSerie} onValueChange={setSelectedSerie}>
@@ -169,7 +187,7 @@ const DisciplinasListScreen = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todas as Séries</SelectItem>
-                                    {SERIES_OPTIONS.map((serie) => (
+                                    {availableSeries.map((serie) => (
                                         <SelectItem key={serie} value={serie}>
                                             {serie}
                                         </SelectItem>
