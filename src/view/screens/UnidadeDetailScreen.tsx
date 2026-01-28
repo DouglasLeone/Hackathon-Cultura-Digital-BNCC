@@ -410,7 +410,6 @@ const UnidadeDetailScreen = () => {
                                         onClick={generateSlides}
                                         disabled={generating === 'slides'}
                                         className="w-full"
-                                        variant="secondary"
                                     >
                                         {generating === 'slides' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Gerar Slides
