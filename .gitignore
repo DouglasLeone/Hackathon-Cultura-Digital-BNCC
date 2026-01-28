@@ -26,3 +26,4 @@ Arquivos/
 
 *.env
 *test_models.js
+coverage
