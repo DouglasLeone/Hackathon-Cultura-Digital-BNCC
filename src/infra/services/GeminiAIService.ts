@@ -278,20 +278,25 @@ export class GeminiAIService implements IAIService {
         }
     }
 
-    async generateAtividade(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], context?: UserContext): Promise<Partial<AtividadeAvaliativa>> {
+    async generateAtividade(unidade: Unidade, habilidadesBNCC: HabilidadeBNCC[], options: import("../../model/services/IAIService").ActivityGenerationOptions, context?: UserContext): Promise<Partial<AtividadeAvaliativa>> {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
         const prompt = `
         Contexto: Atividade avaliativa para a unidade "${unidade.tema}".
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
+        Configurações da Atividade:
+        - Quantidade de Questões Objetivas: ${options.objectiveCount}
+        - Quantidade de Questões Dissertativas: ${options.subjectiveCount}
+        - Nível de Dificuldade: ${options.difficulty}
         
         UTILIZE EXCLUSIVAMENTE as habilidades da BNCC abaixo:
         ${bnccContext}
         
         NÃO crie conteúdos fora dessas habilidades de código: ${codigosBNCC}.
         
-        Tarefa: Crie uma atividade avaliativa com 3 questões (misturando múltipla escolha e dissertativa), focada nessas habilidades.
+        Tarefa: Crie uma atividade avaliativa contendo EXATAMENTE ${options.objectiveCount} questões de múltipla escolha e ${options.subjectiveCount} questões dissertativas, totalizando ${options.objectiveCount + options.subjectiveCount} questões.
+        O nível de dificuldade deve ser: ${options.difficulty}.
         
         Formato de Resposta (JSON):
         {
@@ -306,13 +311,13 @@ export class GeminiAIService implements IAIService {
                     "tipo": "multipla_escolha",
                     "alternativas": ["A", "B", "C", "D"],
                     "resposta_correta": "A",
-                    "pontuacao": 2
+                    "pontuacao": 1.0
                 },
                 {
                     "id": "2",
                     "enunciado": "Texto da questão (Citar habilidade avaliada se possível)",
                     "tipo": "dissertativa",
-                    "pontuacao": 4
+                    "pontuacao": 2.0
                 }
             ]
         }
@@ -323,7 +328,7 @@ export class GeminiAIService implements IAIService {
                 contents: [{ role: "user", parts: [{ text: SYSTEM_PROMPT + "\n\n" + prompt }] }],
                 generationConfig: {
                     responseMimeType: "application/json",
-                    maxOutputTokens: 4096,
+                    maxOutputTokens: 8192,
                     temperature: 0.7
                 }
             });
