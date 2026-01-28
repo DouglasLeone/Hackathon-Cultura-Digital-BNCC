@@ -10,7 +10,9 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
         createUnidadeUseCase,
         deleteUnidadeUseCase,
         updateUnidadeUseCase,
-        suggestUnidadesUseCase
+        suggestUnidadesUseCase,
+        getAllDisciplinasUseCase, // Added for filtering
+        getUserContextUseCase     // Added for filtering
     } = useDI();
 
     const [unidades, setUnidades] = useState<Unidade[]>([]);
@@ -24,7 +26,33 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
             if (disciplinaId) {
                 data = await getUnidadesByDisciplinaUseCase.execute(disciplinaId);
             } else {
-                data = await getAllUnidadesUseCase.execute();
+                // If listing ALL units (Dashboard/Units screen), we must filter by User Context
+                const userId = localStorage.getItem('user_id');
+
+                // Parallel fetch for valid context filtering
+                const [allUnidades, allDisciplinas, userContext] = await Promise.all([
+                    getAllUnidadesUseCase.execute(),
+                    // We only need disciplines if we are going to filter, but fetching them is safe/cheap usually.
+                    // Optimally we could check context first, but Promise.all is cleaner for "loading" state.
+                    getAllDisciplinasUseCase.execute(),
+                    userId ? getUserContextUseCase.execute(userId) : Promise.resolve(null)
+                ]);
+
+                const allowedLevels = userContext?.niveis_ensino || [];
+
+                if (allowedLevels.length > 0) {
+                    // 1. Find which Disciplines are allowed
+                    const allowedDisciplinaIds = new Set(
+                        allDisciplinas
+                            .filter(d => allowedLevels.includes(d.nivel as any))
+                            .map(d => d.id)
+                    );
+
+                    // 2. Filter Units that belong to those Disciplines
+                    data = allUnidades.filter(u => allowedDisciplinaIds.has(u.disciplina_id));
+                } else {
+                    data = allUnidades;
+                }
             }
             setUnidades(data);
         } catch (error) {
@@ -37,7 +65,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
         } finally {
             setLoading(false);
         }
-    }, [disciplinaId, getUnidadesByDisciplinaUseCase, getAllUnidadesUseCase, toast]);
+    }, [disciplinaId, getUnidadesByDisciplinaUseCase, getAllUnidadesUseCase, getAllDisciplinasUseCase, getUserContextUseCase, toast]);
 
     const createUnidade = async (data: Omit<Unidade, 'id' | 'created_at' | 'updated_at' | 'disciplina'>) => {
         try {
