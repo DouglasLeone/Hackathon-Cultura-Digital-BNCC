@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { HistoricoGeracao } from '../model/entities';
+import { HistoricoGeracao, NivelEnsino } from '../model/entities';
 import { useToast } from '../view/components/ui/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDI } from '../di/useDI';
@@ -25,23 +25,27 @@ export const useHistoricoViewModel = () => {
     const [filterSearch, setFilterSearch] = useState<string>('');
     const [filterArquivado, setFilterArquivado] = useState<boolean>(false);
 
+    // Fetch User Context Independently
+    const { data: userContext } = useQuery({
+        queryKey: ['userContext'],
+        queryFn: async () => {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) return null;
+            return getUserContextUseCase.execute(userId);
+        }
+    });
+
+    const userNiveis = userContext?.niveis_ensino || [];
+
     // Fetch Data using React Query
     const { data: historico = [], isLoading: loadingHistorico } = useQuery({
-        queryKey: ['historico'],
+        queryKey: ['historico', userNiveis], // Depend on userNiveis to refetch if context changes
         queryFn: async () => {
             const [historicoData, disciplinasData, unidadesData] = await Promise.all([
                 getHistoricoUseCase.execute(),
                 getAllDisciplinasUseCase.execute(),
                 getAllUnidadesUseCase.execute()
             ]);
-
-            // Fetch User Context
-            const userId = localStorage.getItem('user_id');
-            let userNiveis: string[] = [];
-            if (userId) {
-                const ctx = await getUserContextUseCase.execute(userId);
-                if (ctx) userNiveis = ctx.niveis_ensino;
-            }
 
             // Client-side join and filtering
             return historicoData
@@ -56,19 +60,33 @@ export const useHistoricoViewModel = () => {
                     };
                 })
                 .filter(item => {
-                    // Context Filter: If user has levels set, only show items from those levels
-                    if (userNiveis.length > 0 && item._disciplinaFull) {
-                        return userNiveis.includes(item._disciplinaFull.nivel);
+                    // 1. Strict Check: Discipline MUST exist
+                    if (!item._disciplinaFull) return false;
+
+                    // 2. Strict Check: If linked to a Unit, the Unit MUST exist
+                    if (item.unidade_id && !item.unidade) return false;
+
+                    // 3. Context Filter: If user has levels set, only show items from those levels
+                    if (userNiveis.length > 0) {
+                        return userNiveis.includes(item._disciplinaFull.nivel as NivelEnsino);
                     }
-                    return true; // Show all if no context or no linked disciplina (orphan items)
+                    return true;
                 });
-        }
+        },
+        enabled: !userContext || userNiveis.length >= 0 // Always run, but logically follows context load
     });
 
-    const { data: disciplinas = [], isLoading: loadingDisciplinas } = useQuery({
+    const { data: rawDisciplinas = [], isLoading: loadingDisciplinas } = useQuery({
         queryKey: ['disciplinas'],
         queryFn: () => getAllDisciplinasUseCase.execute()
     });
+
+    // Filter disciplines list for UI Dropdown
+    const disciplines = useMemo(() => {
+        if (!userNiveis || userNiveis.length === 0) return rawDisciplinas;
+        // Cast nivel string to NivelEnsino for check, assuming backend data is valid
+        return rawDisciplinas.filter(d => userNiveis.includes(d.nivel as NivelEnsino));
+    }, [rawDisciplinas, userNiveis]);
 
     const loading = loadingHistorico || loadingDisciplinas;
 
@@ -152,7 +170,7 @@ export const useHistoricoViewModel = () => {
 
     return {
         historico: filteredHistorico,
-        disciplinas,
+        disciplinas: disciplines,
         loading,
         filters: {
             disciplina: filterDisciplina,
