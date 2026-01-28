@@ -6,160 +6,114 @@ import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 
 export const GuidedTour: React.FC = () => {
     const { isActive, currentStep, steps, nextStep, prevStep, endTour, targetRect, isReady } = useTour();
-    const [tooltipCoords, setTooltipCoords] = useState({ top: 0, left: 0, arrowShift: 0 });
 
     const step = useMemo(() => steps?.[currentStep], [steps, currentStep]);
 
     const TOOLTIP_WIDTH = 288; // w-72 = 18rem = 288px
-    const PADDING = 12;
+    const PADDING = 24;
 
-    // Calculate position and adjust for viewport boundaries
-    useEffect(() => {
-        if (!isActive || !targetRect || !isReady || !step) return;
-
-        let top = 0;
-        let left = 0;
-        let arrowShift = 0;
+    const finalStyle = useMemo(() => {
+        if (!isActive || !targetRect || !isReady || !step) return { top: 0, left: 0, transform: 'translate(0, 0)', opacity: 0, arrowOffset: 0, side: 'center' };
 
         const viewportWidth = window.innerWidth;
+        const pad = 16;
+        const tooltipWidth = TOOLTIP_WIDTH;
 
-        // Initial preferred position
+        // Calculate Target Center
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+
+        // Base coordinates (Top-Left of the tooltip box)
+        let top = 0;
+        let left = 0;
+        let side = step.position;
+
+        // 1. Determine Initial Layout
         switch (step.position) {
             case 'top':
+                // Position above, centered horizontally
                 top = targetRect.top - PADDING;
-                left = targetRect.left + targetRect.width / 2;
+                left = targetCenterX - tooltipWidth / 2;
                 break;
             case 'bottom':
+                // Position below, centered horizontally
                 top = targetRect.bottom + PADDING;
-                left = targetRect.left + targetRect.width / 2;
+                left = targetCenterX - tooltipWidth / 2;
                 break;
             case 'left':
-                top = targetRect.top + targetRect.height / 2;
-                left = targetRect.left - PADDING;
+                // Position left, centered vertically
+                top = targetCenterY;
+                left = targetRect.left - PADDING - tooltipWidth;
                 break;
             case 'right':
-                top = targetRect.top + targetRect.height / 2;
+                // Position right, centered vertically
+                top = targetCenterY;
                 left = targetRect.right + PADDING;
                 break;
         }
 
-        // Boundary adjustment (Horizontal)
-        if (step.position === 'top' || step.position === 'bottom') {
-            const minLeft = TOOLTIP_WIDTH / 2 + PADDING;
-            const maxLeft = viewportWidth - (TOOLTIP_WIDTH / 2 + PADDING);
-
-            if (left < minLeft) {
-                arrowShift = left - minLeft;
-                left = minLeft;
-            } else if (left > maxLeft) {
-                arrowShift = left - maxLeft;
-                left = maxLeft;
-            }
-        } else {
-            // position is left or right
-            if (step.position === 'right' && left + TOOLTIP_WIDTH > viewportWidth - PADDING) {
-                left = Math.max(PADDING + TOOLTIP_WIDTH / 2, viewportWidth - TOOLTIP_WIDTH - PADDING);
-            }
+        // 2. Flip Logic (Horizontal only for now)
+        if (step.position === 'right' && left + tooltipWidth > viewportWidth - pad) {
+            side = 'left';
+            left = targetRect.left - PADDING - tooltipWidth;
+        }
+        if (step.position === 'left' && left < pad) {
+            side = 'right';
+            left = targetRect.right + PADDING;
         }
 
-        setTooltipCoords({ top, left, arrowShift });
+        // 3. Horizontal Clamping (Hard constraint)
+        // 3. Horizontal Clamping (Hard constraint)
+        // Estimate height for vertical clamping (approximate)
+        const tooltipHeight = 220;
+
+        // Clamp horizontal
+        left = Math.max(pad, Math.min(left, viewportWidth - tooltipWidth - pad));
+
+        // Clamp vertical
+        // Initial top is centered on targetCenterY (for left/right) or above/below target (for top/bottom)
+        // We need to resolve 'transform' to clamp accurately.
+        let estimatedTop = top;
+        if (side === 'top') estimatedTop -= tooltipHeight;
+        else if (side === 'left' || side === 'right') estimatedTop -= tooltipHeight / 2;
+
+        // Apply vertical clamping safe margin
+        const viewportHeight = window.innerHeight;
+        const clampedTop = Math.max(pad, Math.min(estimatedTop, viewportHeight - tooltipHeight - pad));
+
+        // Shift 'top' by the difference
+        const shiftY = clampedTop - estimatedTop;
+        top += shiftY;
+
+        // 4. Transform Logic
+        let transform = '';
+        if (side === 'top') transform = 'translate(0, -100%)';
+        else if (side === 'bottom') transform = 'translate(0, 0)';
+        else transform = 'translate(0, -50%)'; // left/right
+
+        // 5. Arrow Calculation
+        // Horizontal Arrow Offset (for top/bottom placement)
+        const currentTooltipCenterX = left + tooltipWidth / 2;
+        let arrowOffset = targetCenterX - currentTooltipCenterX;
+
+        // Vertical Arrow Offset (for left/right placement)
+        // We need the arrow Y relative to the tooltip center Y
+        // Current tooltip center Y
+        // If side is left/right, base top was targetCenterY. New top is targetCenterY + shiftY.
+        // The tooltip center Y is actually determined by `top` + transform.
+        // If transform is -50%, center Y is `top`.
+        const currentTooltipCenterY = top;
+        let arrowOffsetY = targetCenterY - currentTooltipCenterY;
+
+        // Clamp arrows
+        const maxArrowOffset = (tooltipWidth / 2) - 24;
+        const maxArrowOffsetY = (tooltipHeight / 2) - 24;
+
+        arrowOffset = Math.max(-maxArrowOffset, Math.min(maxArrowOffset, arrowOffset));
+        arrowOffsetY = Math.max(-maxArrowOffsetY, Math.min(maxArrowOffsetY, arrowOffsetY));
+
+        return { top, left, transform, side, arrowOffset, arrowOffsetY, opacity: 1 };
     }, [isActive, targetRect, isReady, step]);
-
-    const getTooltipStyle = useCallback(() => {
-        if (!targetRect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
-
-        const { top, left } = tooltipCoords;
-        if (!step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
-
-        switch (step.position) {
-            case 'top':
-                return { top, left, transform: 'translate(-50%, -100%)', side: 'top', arrowOffset: 0 };
-            case 'bottom':
-                return { top, left, transform: 'translate(-50%, 0)', side: 'bottom', arrowOffset: 0 };
-            case 'left':
-                return { top, left, transform: 'translate(-100%, -50%)', side: 'left', arrowOffset: 0 };
-            case 'right':
-                return { top: targetRect.top + targetRect.height / 2, left: Math.min(left, window.innerWidth - TOOLTIP_WIDTH - PADDING), transform: 'translate(0, -50%)', side: 'right', arrowOffset: 0 };
-            default:
-                return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
-        }
-    }, [targetRect, step, tooltipCoords]);
-
-    // Refined right-side positioning specifically for elements near the right edge
-    const finalStyle = useMemo(() => {
-        if (!isActive || !targetRect || !isReady || !step) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', side: 'center', arrowOffset: 0 };
-
-        const viewportWidth = window.innerWidth;
-        const pad = 16;
-
-        if (step.position === 'right') {
-            const left = targetRect.right + PADDING;
-            if (left + TOOLTIP_WIDTH > viewportWidth - pad) {
-                // Flip to left if no room on right
-                return {
-                    top: targetRect.top + targetRect.height / 2,
-                    left: targetRect.left - PADDING,
-                    transform: 'translate(-100%, -50%)',
-                    side: 'left',
-                    arrowOffset: 0
-                };
-            }
-            return {
-                top: targetRect.top + targetRect.height / 2,
-                left: left,
-                transform: 'translate(0, -50%)',
-                side: 'right',
-                arrowOffset: 0
-            };
-        }
-
-        if (step.position === 'left') {
-            const left = targetRect.left - PADDING;
-            if (left - TOOLTIP_WIDTH < pad) {
-                // Flip to right if no room on left
-                return {
-                    top: targetRect.top + targetRect.height / 2,
-                    left: targetRect.right + PADDING,
-                    transform: 'translate(0, -50%)',
-                    side: 'right',
-                    arrowOffset: 0
-                };
-            }
-            return {
-                top: targetRect.top + targetRect.height / 2,
-                left: left,
-                transform: 'translate(-100%, -50%)',
-                side: 'left',
-                arrowOffset: 0
-            };
-        }
-
-        // Handle top/bottom with horizontal shifting
-        if (step.position === 'top' || step.position === 'bottom') {
-            let left = targetRect.left + targetRect.width / 2;
-            let transformX = -50;
-
-            // Constrain left
-            const halfWidth = TOOLTIP_WIDTH / 2;
-            if (left - halfWidth < pad) {
-                left = pad;
-                transformX = 0;
-            } else if (left + halfWidth > viewportWidth - pad) {
-                left = viewportWidth - pad;
-                transformX = -100;
-            }
-
-            return {
-                top: step.position === 'top' ? targetRect.top - PADDING : targetRect.bottom + PADDING,
-                left: left,
-                transform: `translate(${transformX}%, ${step.position === 'top' ? '-100%' : '0'})`,
-                side: step.position,
-                arrowOffset: transformX === 0 ? (targetRect.left + targetRect.width / 2 - pad) : (transformX === -100 ? (targetRect.left + targetRect.width / 2 - (viewportWidth - pad)) : 0)
-            };
-        }
-
-        return getTooltipStyle();
-    }, [isActive, targetRect, isReady, step, getTooltipStyle]);
 
     if (!isActive || !steps || steps.length === 0 || !step) return null;
 
@@ -242,6 +196,9 @@ export const GuidedTour: React.FC = () => {
                             style={{
                                 left: (finalStyle.side === 'top' || finalStyle.side === 'bottom')
                                     ? `calc(50% + ${finalStyle.arrowOffset || 0}px)`
+                                    : undefined,
+                                top: (finalStyle.side === 'left' || finalStyle.side === 'right')
+                                    ? `calc(50% + ${finalStyle.arrowOffsetY || 0}px)`
                                     : undefined
                             }}
                         />

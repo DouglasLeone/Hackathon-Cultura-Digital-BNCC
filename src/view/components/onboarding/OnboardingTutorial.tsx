@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BookOpen,
@@ -49,35 +49,6 @@ const steps: Step[] = [
     }
 ];
 
-const TOUR_STEPS: TourStep[] = [
-    {
-        target: "tour-sidebar-disciplinas",
-        title: "Suas Disciplinas",
-        content: "Aqui você gerencia todas as matérias que você leciona.",
-        position: "right",
-        path: "/"
-    },
-    {
-        target: "tour-new-disciplina",
-        title: "Criar Disciplina",
-        content: "Clique aqui para cadastrar uma nova disciplina ou área de conhecimento.",
-        position: "bottom",
-        path: "/disciplinas"
-    },
-    {
-        target: "tour-new-unidade",
-        title: "Adicionar Unidade",
-        content: "Dentro de cada disciplina, use este botão para criar novos tópicos ou unidades de ensino.",
-        position: "bottom"
-    },
-    {
-        target: "tour-generate-plano",
-        title: "Geração com IA",
-        content: "Finalmente, use a IA para gerar planos de aula, atividades e slides alinhados à BNCC.",
-        position: "top"
-    }
-];
-
 interface OnboardingTutorialProps {
     onComplete: () => void;
 }
@@ -85,14 +56,70 @@ interface OnboardingTutorialProps {
 export const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({ onComplete }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const { startTour } = useTour();
+    const { getAllDisciplinasUseCase, getUnidadesByDisciplinaUseCase, getUserContextUseCase } = useDI();
 
-    const handleNext = () => {
+    const buildDynamicTourSteps = async (): Promise<TourStep[]> => {
+        const tourSteps: TourStep[] = [
+            {
+                target: "tour-sidebar-disciplinas",
+                title: "Suas Disciplinas",
+                content: "Aqui você gerencia todas as matérias que você leciona.",
+                position: "right",
+                path: "/"
+            },
+            {
+                target: "tour-new-disciplina",
+                title: "Criar Disciplina",
+                content: "Clique aqui para cadastrar uma nova disciplina ou área de conhecimento.",
+                position: "bottom",
+                path: "/disciplinas"
+            }
+        ];
+
+        try {
+            const userId = localStorage.getItem('user_id');
+            if (!userId) return tourSteps; // Return basic tour if no user
+
+            // Fetch user's disciplines using usecase
+            let disciplinas = await getAllDisciplinasUseCase.execute();
+
+            // Filter by user context if needed (simulating ViewModel logic)
+            const ctx = await getUserContextUseCase.execute(userId);
+            if (ctx && ctx.niveis_ensino && ctx.niveis_ensino.length > 0) {
+                // Basic filtering to ensure we get relevant disciplines
+                disciplinas = disciplinas.filter(d => ctx.niveis_ensino.includes(d.nivel as any));
+            }
+
+            if (disciplinas.length > 0) {
+                const firstDisciplina = disciplinas[0];
+
+                // Add step 3: Navigate to first discipline
+                tourSteps.push({
+                    target: "tour-new-unidade",
+                    title: "Adicionar Unidade",
+                    content: "Dentro de cada disciplina, use este botão para criar novos tópicos ou unidades de ensino.",
+                    position: "bottom",
+                    path: `/disciplinas/${firstDisciplina.id}`
+                });
+
+                // Step 4 removed as per user request
+            }
+        } catch (error) {
+            console.error("Error building dynamic tour steps:", error);
+        }
+
+        return tourSteps;
+    };
+
+    const handleNext = async () => {
         if (currentStep < steps.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
             onComplete();
-            // Start the interactive tour automatically
-            startTour(TOUR_STEPS);
+
+            // Build dynamic tour steps based on user data
+            const dynamicTourSteps = await buildDynamicTourSteps();
+            startTour(dynamicTourSteps);
         }
     };
 
