@@ -13,6 +13,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
     } = useDI();
     const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
     const [loading, setLoading] = useState(true);
+    const [userLevels, setUserLevels] = useState<NivelEnsino[]>([]);
     const { toast } = useToast();
 
     const loadDisciplinas = useCallback(async () => {
@@ -26,6 +27,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
             if (userId) {
                 const ctx = await getUserContextUseCase.execute(userId);
                 if (ctx && ctx.niveis_ensino && ctx.niveis_ensino.length > 0) {
+                    setUserLevels(ctx.niveis_ensino);
                     // Filter Disciplinas: Only show those matching the user (Ensino Fundamental/Médio)
                     // Note: Disciplina 'nivel' field must match one of the user's selected levels
                     data = data.filter(d => ctx.niveis_ensino.includes(d.nivel as NivelEnsino));
@@ -81,6 +83,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
         disciplinas,
         loading,
         refresh: loadDisciplinas,
-        deleteDisciplina
+        deleteDisciplina,
+        userLevels: userLevels // Expose for UI logic
     };
 };
