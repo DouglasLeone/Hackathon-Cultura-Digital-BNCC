@@ -46,7 +46,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({ content, classNa
                     ul: ({ node, ...props }) => <ul className="list-disc pl-6 my-3 space-y-1" {...props} />,
                     ol: ({ node, ...props }) => <ol className="list-decimal pl-6 my-3 space-y-1" {...props} />,
                     li: ({ node, ...props }) => <li className="text-gray-700" {...props} />,
-                    code: ({ node, inline, ...props }) => {
+                    code: ({ node, inline, ...props }: { node?: any; inline?: boolean;[key: string]: any }) => {
                         if (inline) {
                             return <code className="bg-gray-100 px-1 py-0.5 rounded text-sm text-pink-600 font-mono" {...props} />;
                         }
