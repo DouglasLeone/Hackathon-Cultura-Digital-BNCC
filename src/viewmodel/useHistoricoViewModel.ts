@@ -56,11 +56,18 @@ export const useHistoricoViewModel = () => {
                     };
                 })
                 .filter(item => {
-                    // Context Filter: If user has levels set, only show items from those levels
-                    if (userNiveis.length > 0 && item._disciplinaFull) {
+                    // 1. Strict Check: Discipline MUST exist
+                    // If the discipline was deleted, its history is orphan and should be hidden/removed
+                    if (!item._disciplinaFull) return false;
+
+                    // 2. Strict Check: If linked to a Unit, the Unit MUST exist
+                    if (item.unidade_id && !item.unidade) return false;
+
+                    // 3. Context Filter: If user has levels set, only show items from those levels
+                    if (userNiveis.length > 0) {
                         return userNiveis.includes(item._disciplinaFull.nivel);
                     }
-                    return true; // Show all if no context or no linked disciplina (orphan items)
+                    return true;
                 });
         }
     });
