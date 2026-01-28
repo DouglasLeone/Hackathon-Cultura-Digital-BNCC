@@ -282,9 +282,22 @@ export class GeminiAIService implements IAIService {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
+        let contextPlano = "";
+        if (unidade.plano_aula && unidade.plano_aula.conteudo) {
+            contextPlano = `
+            ATENÇÃO: A atividade deve ser baseada ESTRITAMENTE no seguinte conteúdo que foi ensinado no Plano de Aula:
+            --- INÍCIO CONTEÚDO ENSINADO ---
+            ${unidade.plano_aula.conteudo.substring(0, 3000)}... (resumo)
+            --- FIM CONTEÚDO ENSINADO ---
+
+            Certifique-se que as questões avaliem conceitos presentes neste texto.
+            `;
+        }
+
         const prompt = `
         Contexto: Atividade avaliativa para a unidade "${unidade.tema}".
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
+        ${contextPlano}
         Configurações da Atividade:
         - Quantidade de Questões Objetivas: ${options.objectiveCount}
         - Quantidade de Questões Dissertativas: ${options.subjectiveCount}
@@ -343,11 +356,24 @@ export class GeminiAIService implements IAIService {
         const bnccContext = habilidadesBNCC.map(h => `- [${h.codigo}] ${h.descricao}`).join("\n");
         const codigosBNCC = habilidadesBNCC.map(h => h.codigo).join(", ");
 
+        let contextPlano = "";
+        if (unidade.plano_aula && unidade.plano_aula.conteudo) {
+            contextPlano = `
+            IMPORTANTE: Os slides devem refletir EXATAMENTE a estrutura e conteúdo do Plano de Aula já gerado abaixo:
+            --- CONTEÚDO DO PLANO DE AULA ---
+            ${unidade.plano_aula.conteudo.substring(0, 3000)}...
+            --- FIM CONTEÚDO ---
+
+            Não invente tópicos novos. Resuma visualmente o que já foi definido no plano acima.
+            `;
+        }
+
         const prompt = `
         Aja como um designer instrucional e especialista em apresentações educacionais.
         Crie uma apresentação de slides profissional e engajadora sobre: "${unidade.tema}".
         Disciplina: ${unidade.disciplina?.nome || "Geral"}.
         Contexto do Usuário: ${context ? JSON.stringify(context) : "Nenhum contexto adicional"}.
+        ${contextPlano}
         
         Baseie-se nestas habilidades BNCC:
         ${bnccContext}
