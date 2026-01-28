@@ -74,11 +74,11 @@ export const useUnidadeDetailViewModel = (unidadeId: string) => {
         }
     };
 
-    const generateAtividade = async () => {
+    const generateAtividade = async (options?: import('../model/services/IAIService').ActivityGenerationOptions) => {
         if (!unidade) return;
         setGenerating('atividade');
         try {
-            const result = await generateAtividadeUseCase.execute(unidade, userId);
+            const result = await generateAtividadeUseCase.execute(unidade, userId, options);
 
             await logMaterialGenerationUseCase.execute({
                 tipo: 'atividade',
