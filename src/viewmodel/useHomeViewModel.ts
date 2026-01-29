@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useDI } from '../di/useDI';
 import { HistoricoGeracao } from '../model/entities';
 import { NivelEnsino } from '../model/entities/BNCC';
+import { useToast } from '../view/components/ui/use-toast';
 
 export const useHomeViewModel = () => {
     const {
@@ -11,6 +12,7 @@ export const useHomeViewModel = () => {
         getHistoricoUseCase,
         getUserContextUseCase
     } = useDI();
+    const { toast } = useToast();
 
     const [stats, setStats] = useState({ disciplinas: 0, unidades: 0, planos: 0, atividades: 0 });
     const [historico, setHistorico] = useState<HistoricoGeracao[]>([]);
@@ -81,6 +83,11 @@ export const useHomeViewModel = () => {
                 setHistorico(enrichedHistorico);
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
+                toast({
+                    title: "Erro",
+                    description: "Não foi possível carregar os dados do painel.",
+                    variant: "destructive",
+                });
             } finally {
                 setLoading(false);
             }
