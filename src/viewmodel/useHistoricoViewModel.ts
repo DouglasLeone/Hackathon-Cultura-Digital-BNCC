@@ -35,7 +35,7 @@ export const useHistoricoViewModel = () => {
         }
     });
 
-    const userNiveis = userContext?.niveis_ensino || [];
+    const userNiveis = useMemo(() => userContext?.niveis_ensino || [], [userContext]);
 
     // Fetch Data using React Query
     const { data: historico = [], isLoading: loadingHistorico } = useQuery({

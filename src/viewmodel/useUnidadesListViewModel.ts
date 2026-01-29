@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Unidade, Disciplina } from '../model/entities';
+import { NivelEnsino } from '../model/entities/BNCC';
 import { useToast } from '../view/components/ui/use-toast';
 import { useDI } from '../di/useDI';
 
@@ -44,7 +45,7 @@ export const useUnidadesListViewModel = (disciplinaId?: string) => {
                     // 1. Find which Disciplines are allowed
                     const allowedDisciplinaIds = new Set(
                         allDisciplinas
-                            .filter(d => allowedLevels.includes(d.nivel as any))
+                            .filter(d => allowedLevels.includes(d.nivel as NivelEnsino))
                             .map(d => d.id)
                     );
 

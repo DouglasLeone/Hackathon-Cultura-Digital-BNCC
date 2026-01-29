@@ -94,7 +94,7 @@ export const useHomeViewModel = () => {
         };
 
         loadData();
-    }, [getAllDisciplinasUseCase, getAllUnidadesUseCase, getHistoricoUseCase, getUserContextUseCase]);
+    }, [getAllDisciplinasUseCase, getAllUnidadesUseCase, getHistoricoUseCase, getUserContextUseCase, toast]);
 
     return {
         stats,
