@@ -33,7 +33,7 @@ export const useSettingsViewModel = () => {
             setLoading(false);
         };
         loadSettings();
-    }, [getUserContextUseCase]);
+    }, [getUserContextUseCase, toast]);
 
     const toggleNivel = (level: string) => {
         // Enforce single selection logic if using RadioGroup as per View
