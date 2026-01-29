@@ -23,6 +23,11 @@ export const useSettingsViewModel = () => {
                     }
                 } catch (error) {
                     console.error('Error loading settings:', error);
+                    toast({
+                        title: "Erro",
+                        description: "Não foi possível carregar as configurações.",
+                        variant: "destructive",
+                    });
                 }
             }
             setLoading(false);

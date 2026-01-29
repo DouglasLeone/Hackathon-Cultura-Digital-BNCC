@@ -49,9 +49,7 @@ export class GeminiAIService implements IAIService {
                 throw innerError;
             }
         } catch (e) {
-            console.error("Failed to parse AI JSON. Length:", text.length);
-            console.error("Partial text:", text.substring(0, 500) + "...");
-            throw new Error(`Erro de processamento da IA: A resposta gerada não é um JSON válido. Detalhes: ${e instanceof Error ? e.message : 'Desconhecido'}`);
+            throw new Error(`A IA teve um pequeno soluço ao organizar os dados. Por favor, tente gerar novamente.`);
         }
     }
 
@@ -165,7 +163,7 @@ export class GeminiAIService implements IAIService {
             return this.cleanAndParseJSON(result.response.text());
         } catch (error) {
             console.error("Error generating units:", error);
-            return ["Erro ao gerar sugestões. Tente novamente."];
+            return ["Não foi possível gerar sugestões agora. Tente novamente em instantes."];
         }
     }
 
@@ -272,8 +270,8 @@ export class GeminiAIService implements IAIService {
         } catch (error) {
             console.error("Error generating lesson plan:", error);
             return {
-                titulo: "Erro ao gerar plano de aula",
-                conteudo: "Ocorreu um erro ao processar a resposta da IA. Por favor, tente novamente.\n\nDetalhes do erro: " + (error instanceof Error ? error.message : String(error))
+                titulo: "Ops! Algo deu errado",
+                conteudo: "Não conseguimos gerar o plano de aula agora. Pode ser um problema de conexão ou a IA precisa de um descanso. Por favor, tente novamente."
             };
         }
     }
