@@ -9,9 +9,10 @@ import {
     query,
     where,
     orderBy,
-    limit
+    limit,
+    Firestore
 } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db as defaultDb } from '../../config/firebase';
 import { Unidade, PlanoAula, AtividadeAvaliativa, MaterialSlides } from '../../../model/entities';
 import { IUnidadeRepository } from '../../../model/repositories/IUnidadeRepository';
 
@@ -19,10 +20,15 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     private collectionName = 'unidades';
     private planosCollection = 'planos_aula';
     private atividadesCollection = 'atividades_avaliativas';
+    private db: Firestore;
+
+    constructor(db: Firestore = defaultDb) {
+        this.db = db;
+    }
 
     // Unidade Methods
     async getAll(): Promise<Unidade[]> {
-        const q = query(collection(db, this.collectionName), orderBy('tema'));
+        const q = query(collection(this.db, this.collectionName), orderBy('tema'));
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => ({
             id: doc.id,
@@ -32,7 +38,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
 
     async getByDisciplinaId(disciplinaId: string): Promise<Unidade[]> {
         const q = query(
-            collection(db, this.collectionName),
+            collection(this.db, this.collectionName),
             where('disciplina_id', '==', disciplinaId)
         );
         const querySnapshot = await getDocs(q);
@@ -43,7 +49,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     }
 
     async getById(id: string): Promise<Unidade | null> {
-        const docRef = doc(db, this.collectionName, id);
+        const docRef = doc(this.db, this.collectionName, id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -73,7 +79,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
      * Used for joins and batch operations
      */
     private async getDisciplinaById(id: string) {
-        const disciplinaRef = doc(db, 'disciplinas', id);
+        const disciplinaRef = doc(this.db, 'disciplinas', id);
         const disciplinaSnap = await getDoc(disciplinaRef);
         if (disciplinaSnap.exists()) {
             return { id: disciplinaSnap.id, ...disciplinaSnap.data() } as import('../../../model/entities').Disciplina;
@@ -89,7 +95,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
             updated_at: now
         };
 
-        const docRef = await addDoc(collection(db, this.collectionName), data);
+        const docRef = await addDoc(collection(this.db, this.collectionName), data);
 
         return {
             id: docRef.id,
@@ -98,7 +104,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     }
 
     async update(id: string, unidade: Partial<Unidade>): Promise<Unidade> {
-        const docRef = doc(db, this.collectionName, id);
+        const docRef = doc(this.db, this.collectionName, id);
         const now = new Date().toISOString();
         const dataToUpdate = {
             ...unidade,
@@ -123,14 +129,14 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     async delete(id: string): Promise<void> {
         // Warning: This doesn't cascade delete linked materials yet. 
         // In a production app, we should delete linked planos and atividades.
-        const docRef = doc(db, this.collectionName, id);
+        const docRef = doc(this.db, this.collectionName, id);
         await deleteDoc(docRef);
     }
 
     // PlanoAula Methods
     async getPlanoAula(unidadeId: string): Promise<PlanoAula | null> {
         const q = query(
-            collection(db, this.planosCollection),
+            collection(this.db, this.planosCollection),
             where('unidade_id', '==', unidadeId),
             limit(1)
         );
@@ -155,7 +161,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
             updated_at: now
         };
 
-        const docRef = await addDoc(collection(db, this.planosCollection), data);
+        const docRef = await addDoc(collection(this.db, this.planosCollection), data);
 
         return {
             id: docRef.id,
@@ -164,7 +170,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     }
 
     async updatePlanoAula(id: string, plano: Partial<PlanoAula>): Promise<void> {
-        const docRef = doc(db, this.planosCollection, id);
+        const docRef = doc(this.db, this.planosCollection, id);
         const now = new Date().toISOString();
         const dataToUpdate = {
             ...plano,
@@ -181,7 +187,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     // AtividadeAvaliativa Methods
     async getAtividade(unidadeId: string): Promise<AtividadeAvaliativa | null> {
         const q = query(
-            collection(db, this.atividadesCollection),
+            collection(this.db, this.atividadesCollection),
             where('unidade_id', '==', unidadeId),
             limit(1)
         );
@@ -206,7 +212,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
             updated_at: now
         };
 
-        const docRef = await addDoc(collection(db, this.atividadesCollection), data);
+        const docRef = await addDoc(collection(this.db, this.atividadesCollection), data);
 
         return {
             id: docRef.id,
@@ -215,7 +221,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     }
 
     async updateAtividade(id: string, atividade: Partial<AtividadeAvaliativa>): Promise<void> {
-        const docRef = doc(db, this.atividadesCollection, id);
+        const docRef = doc(this.db, this.atividadesCollection, id);
         const now = new Date().toISOString();
         const dataToUpdate = {
             ...atividade,
@@ -231,7 +237,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
 
     // Slides Methods
     async createMaterialSlides(data: Omit<MaterialSlides, 'id' | 'created_at' | 'updated_at'>): Promise<MaterialSlides> {
-        const slidesRef = collection(db, 'material_slides');
+        const slidesRef = collection(this.db, 'material_slides');
         const now = new Date().toISOString();
         const docRef = await addDoc(slidesRef, {
             ...data,
@@ -243,7 +249,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
 
     async getMaterialSlides(unidadeId: string): Promise<MaterialSlides | null> {
         const q = query(
-            collection(db, 'material_slides'),
+            collection(this.db, 'material_slides'),
             where('unidade_id', '==', unidadeId)
             // Removed orderBy to avoid composite index requirement during hackathon
             // orderBy('created_at', 'desc'),
@@ -263,7 +269,7 @@ export class FirestoreUnidadeRepository implements IUnidadeRepository {
     }
 
     async updateMaterialSlides(id: string, data: Partial<MaterialSlides>): Promise<void> {
-        const docRef = doc(db, 'material_slides', id);
+        const docRef = doc(this.db, 'material_slides', id);
         await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
     }
 }
