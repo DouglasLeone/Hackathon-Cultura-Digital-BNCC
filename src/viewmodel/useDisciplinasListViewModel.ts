@@ -60,7 +60,7 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
         } finally {
             setLoading(false);
         }
-    }, [areaFilter, serieFilter, nivelFilter, getAllDisciplinasUseCase, getUserContextUseCase]);
+    }, [areaFilter, serieFilter, nivelFilter, getAllDisciplinasUseCase, getUserContextUseCase, toast]);
 
     const deleteDisciplina = async (id: string) => {
         try {
