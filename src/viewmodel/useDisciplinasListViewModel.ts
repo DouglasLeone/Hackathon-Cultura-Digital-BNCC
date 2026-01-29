@@ -52,6 +52,11 @@ export const useDisciplinasListViewModel = (areaFilter?: string, serieFilter?: s
             setDisciplinas(data);
         } catch (error) {
             console.error('Error fetching disciplinas:', error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível carregar as disciplinas.",
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }
