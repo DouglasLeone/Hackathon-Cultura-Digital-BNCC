@@ -11,7 +11,9 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:emulator": "firebase emulators:exec --config src/test/configs/firebase.json --only firestore \"npm run test:integration\""
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -99,6 +101,7 @@
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "firebase-tools": "^15.4.0",
     "globals": "^15.15.0",
     "jsdom": "^27.4.0",
     "lovable-tagger": "^1.1.13",
