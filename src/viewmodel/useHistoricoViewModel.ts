@@ -14,6 +14,7 @@ export const useHistoricoViewModel = () => {
         deleteHistoricoUseCase,
         updatePlanoAulaUseCase,
         updateAtividadeUseCase,
+        updateSlidesUseCase,
         getUnidadeByIdUseCase
     } = useDI();
     const { toast } = useToast();
@@ -94,7 +95,7 @@ export const useHistoricoViewModel = () => {
     const deleteMutation = useMutation({
         mutationFn: (id: string) => deleteHistoricoUseCase.execute(id),
         onSuccess: (_, id) => {
-            queryClient.setQueryData(['historico'], (old: { id: string }[]) => old.filter((item) => item.id !== id));
+            queryClient.invalidateQueries({ queryKey: ['historico'] });
             toast({
                 title: "Sucesso",
                 description: "Item removido do histórico.",
@@ -104,7 +105,7 @@ export const useHistoricoViewModel = () => {
             console.error('Error deleting historico:', error);
             toast({
                 title: "Erro",
-                description: "Falha ao remover item.",
+                description: "Falha ao remover item: " + error.message,
                 variant: "destructive"
             });
         }
@@ -122,14 +123,19 @@ export const useHistoricoViewModel = () => {
                 return updatePlanoAulaUseCase.execute(targetId, { arquivado: novoEstado });
             } else if (item.tipo === 'atividade') {
                 return updateAtividadeUseCase.execute(targetId, { arquivado: novoEstado });
+            } else if (item.tipo === 'slides') {
+                return updateSlidesUseCase.execute(targetId, { arquivado: novoEstado });
             }
-            throw new Error("Tipo não suportado para arquivamento");
+            throw new Error(`Tipo ${item.tipo} não suportado para arquivamento.`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['historico'] });
             toast({ title: "Sucesso", description: "Status atualizado." });
         },
-        onError: () => toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" })
+        onError: (error) => {
+            console.error(error);
+            toast({ title: "Erro", description: "Falha ao atualizar status: " + error.message, variant: "destructive" });
+        }
     });
 
     const toggleArchive = (item: HistoricoGeracao) => archiveMutation.mutate(item);

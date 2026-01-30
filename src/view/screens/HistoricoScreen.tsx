@@ -11,6 +11,16 @@ import { useHistoricoViewModel } from '@/viewmodel/useHistoricoViewModel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/view/components/ui/dialog';
 import { HistoricoGeracao } from '@/model/entities';
 import { PDFService } from '@/infra/services/PDFService';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/view/components/ui/alert-dialog";
 
 const HistoricoScreen = () => {
     const {
@@ -25,6 +35,7 @@ const HistoricoScreen = () => {
     } = useHistoricoViewModel();
 
     const [selectedItem, setSelectedItem] = useState<HistoricoGeracao | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -213,11 +224,7 @@ const HistoricoScreen = () => {
                                                     variant="destructive"
                                                     size="icon"
                                                     className="h-9 w-9"
-                                                    onClick={() => {
-                                                        if (confirm("Tem certeza que deseja excluir DEFNITIVAMENTE este item?")) {
-                                                            deleteHistorico(item.id);
-                                                        }
-                                                    }}
+                                                    onClick={() => setItemToDelete(item.id)}
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -310,8 +317,34 @@ const HistoricoScreen = () => {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+
+                <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza absoluta?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Essa ação não pode ser desfeita. Isso excluirá permanentemente o item do seu histórico.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => {
+                                    if (itemToDelete) {
+                                        deleteHistorico(itemToDelete);
+                                        setItemToDelete(null);
+                                    }
+                                }}
+                            >
+                                Excluir
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 };
 
