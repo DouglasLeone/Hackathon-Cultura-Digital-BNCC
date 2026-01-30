@@ -34,6 +34,26 @@ O projeto foi construído seguindo padrões de **Clean Architecture** e **MVVM**
 - **Validação**: [Zod](https://zod.dev/)
 - **Animações**: [Framer Motion](https://www.framer.com/motion/)
 
+### 📂 Estrutura de Pastas
+
+A estrutura do projeto segue uma organização lógica para facilitar a manutenção e escalabilidade:
+
+```text
+src/
+├── app/          # Configurações globais e inicialização
+├── di/           # Container de Injeção de Dependências
+├── hooks/        # React Hooks personalizados
+├── infra/        # Implementações de serviços externos (Firebase, etc.)
+├── lib/          # Utilitários e bibliotecas compartilhadas
+├── model/        # Entidades e interfaces de Domínio
+├── usecase/      # Casos de uso e regras de negócio
+├── view/         # Interface do Usuário (UI)
+│   ├── components/ # Componentes reutilizáveis (Botões, Inputs, etc.)
+│   └── screens/    # Telas e páginas da aplicação
+├── viewmodel/    # Lógica de apresentação e estado das views
+└── test/         # Configurações e utilitários de teste
+```
+
 ---
 
 ## 🛠️ Configuração Local
